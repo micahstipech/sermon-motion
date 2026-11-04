@@ -49,8 +49,8 @@ the scan output, with what you'll do in the meantime:
 |---|---|---|
 | Background | "Is there a large square background texture for this series? Name it Background." | use the kit ground colour flat; no full-frame texture |
 | Colors | "Is there a Colors photo for the palette?" | sample Example.png and the background, label colours "from Example.png" |
-| Fonts | "Can I get the series font files (.ttf/.otf)?" | stop before the mood board: type is the series' identity |
-| Only .woff/.woff2 | "Resolve needs .ttf/.otf versions of these fonts." | previews work, Fusion won't |
+| Fonts | "Can I get the series font files (.ttf/.otf)?" | Roboto Condensed from Google Fonts (below) |
+| Only .woff/.woff2, or a file that won't open | "Resolve needs working .ttf/.otf versions of these fonts." | Roboto Condensed from Google Fonts |
 | Assets folder | "Are there transparent PNGs from the art (icons, logos, title card)? They go in Assets/." | type-only graphics |
 | Asset without transparency | "Is there a transparent PNG of <name>?" | don't use it over footage |
 | Example | "Is there an Example.png showing everything together?" | read the art yourself; say the signature moves are guesses |
@@ -99,6 +99,28 @@ motion and subtitle settings. Finish it ([style-intake.md](style-intake.md)):
 - set the motion personality, signature moves and avoid list.
 
 Leave `"draft": true` until the mood board is approved, then remove it.
+
+## 5b. Fallback font: Roboto Condensed
+
+When the series has **no usable fonts**, use **Roboto Condensed**, loaded from Google Fonts. Usable
+means installable (.ttf/.otf), readable, and legible:
+
+- No font files, only web fonts, or files that won't open → Roboto Condensed for every role.
+  `series --draft` does this automatically.
+- The series font is legible for titles but not at label or subtitle sizes (script, grunge, heavy
+  ornament, ultra-thin) → keep it for `display`, and use Roboto Condensed for `text` and `subtitle`:
+  `mg.py font-fallback "<name>" --roles text,subtitle`.
+- The series font is not legible even as a title → `mg.py font-fallback "<name>"` (all roles).
+
+Judge legibility at real size: set a 5–7 word line at 46 px (subtitle) and 26 px (label) over a
+footage frame. If you have to work to read it, it fails that role.
+
+The command downloads TrueType files (Regular, Medium, Bold, Italic) from Google Fonts, caches them
+in `~/.stipech-motion/fonts/`, copies them into the series folder's `Fonts/` so the package carries
+them to the PC, and updates `kit.json`. The roles it writes are Bold for display, Medium for text and
+subtitles, and Italic for italic, each marked `"fallback": true`. Still ask the user for the real
+fonts; the fallback keeps work moving until they arrive. With no network, tell the user to install
+Roboto Condensed from fonts.google.com and drop the .ttf files into the series folder.
 
 ## 6. Using the series files in graphics
 

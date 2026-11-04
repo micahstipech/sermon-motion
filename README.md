@@ -61,7 +61,7 @@ Make a folder `house/Sermon Series/<Series Name>/` (or wherever `series_root` po
 |---|---|
 | `Background.jpg` / `.png` | large square texture used as the background (extras: `Background 2`, …) |
 | `Colors.jpg` / `.png` | a photo whose colours the series uses; the skill analyses it and picks |
-| font files (`.ttf` / `.otf`) | the series fonts |
+| font files (`.ttf` / `.otf`) | the series fonts (none usable or legible → Roboto Condensed from Google Fonts) |
 | `Example.png` | everything used together |
 | `Assets/` | transparent PNGs: icons, logos, title cards, other art elements |
 

@@ -12,6 +12,7 @@ See skills/motion-designer/references/learning.md.
 - [pref 2026-11-04] Prefer editable Fusion templates placed on the timeline; ProRes renders as backup. (setup)
 - [pref 2026-11-04] No sound work and no cutting the edit in this skill. (initial brief)
 - [pref 2026-11-04] New series arrive as "Sermon Series/<Series Name>/" with Background (large square texture, may be several), Colors (photo: analyse and pick), font files, Example.png (everything together) and Assets/ (transparent PNGs). "When it doesn't [include them], ask for them." (series folder brief)
+- [pref 2026-11-04] "When no fonts are legible or available, just use Roboto Condensed. Load it from Google Fonts." (font fallback)
 
 ## Observed
 

@@ -203,6 +203,9 @@ line what you are asking them to approve.
 
 ## Gotchas
 
+- No usable or legible series fonts → Roboto Condensed from Google Fonts (`mg.py font-fallback`,
+  automatic in `series --draft`). Keep asking for the real fonts.
+
 - Series backgrounds are large square textures. Use them as `"fit": "cover"` image layers on
   full-frame cards, never as boxes behind text over footage. Previews downscale them automatically;
   Fusion loads the original.

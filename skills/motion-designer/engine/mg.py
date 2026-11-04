@@ -16,6 +16,7 @@
   package PLAN.json OUT          folder for the editing PC (Resolve)
   series NAME|PATH [--draft]     scan a "Sermon Series/<name>" folder; analyse Colors; draft kit.json
   series --list                  list series folders and their kit status
+  font-fallback SERIES [--roles] Roboto Condensed (Google Fonts) for roles the series fonts can't carry
 """
 import argparse
 import glob
@@ -237,10 +238,50 @@ def cmd_series(a):
         if os.path.exists(kit) and not a.force:
             print(f"\nkit.json exists; not overwritten (use --force). {kit}")
         else:
+            fb = [f for f in inv["fonts"] if f.get("fallback")]
+            if not [f for f in inv["fonts"] if not f.get("fallback")] and not fb:
+                fb = _fallback_fonts(inv["folder"])
             with open(kit, "w", encoding="utf-8") as f:
-                json.dump(series.draft_kit(inv, an), f, indent=1)
+                json.dump(series.draft_kit(inv, an, fb), f, indent=1)
             print(f"\ndraft kit -> {kit}  (finish it: references/style-intake.md, then remove \"draft\")")
     sys.exit(2 if inv["missing"] else 0)
+
+
+def _fallback_fonts(folder):
+    from stipech import fonts
+    try:
+        got = fonts.install_fallback(folder)
+        print(f"\nno usable series fonts: installed Roboto Condensed (Google Fonts) -> {os.path.join(folder, 'Fonts')}")
+        return got
+    except Exception as e:
+        print(f"\nWARNING: could not download Roboto Condensed from Google Fonts ({e}). "
+              "Install it from https://fonts.google.com/specimen/Roboto+Condensed and copy the .ttf files into the series folder.")
+        return []
+
+
+def cmd_font_fallback(a):
+    """Use Roboto Condensed for some or all type roles (no fonts, unreadable fonts, or illegible ones)."""
+    from stipech import fonts
+    root = _series_root(a)
+    folder = a.series if os.path.isdir(a.series) else os.path.join(root or "", a.series)
+    got = fonts.install_fallback(folder)
+    print(f"Roboto Condensed (Google Fonts) -> {os.path.join(folder, 'Fonts')}")
+    for f in got:
+        print(f"  {f['family']} {f['style']}  {f['file']}  avg_char {f['avg_char']}")
+    kit_path = os.path.join(folder, "kit.json")
+    roles = [r.strip() for r in a.roles.split(",") if r.strip()]
+    if os.path.exists(kit_path):
+        kit = S.load_json(kit_path)
+        kit.setdefault("type", {}).update(fonts.fallback_roles(got, roles))
+        avail = kit.setdefault("available_fonts", [])
+        for f in got:
+            if f["file"] not in [x.get("file") for x in avail]:
+                avail.append(f)
+        with open(kit_path, "w", encoding="utf-8") as fh:
+            json.dump(kit, fh, indent=1)
+        print(f"kit.json roles now Roboto Condensed: {', '.join(roles)}")
+    else:
+        print("no kit.json yet; `series --draft` will use these files.")
 
 
 def cmd_ledger(a):
@@ -315,6 +356,9 @@ def main():
     p.add_argument("--draft", action="store_true", help="write a draft kit.json into the series folder")
     p.add_argument("--force", action="store_true"); p.add_argument("--root"); p.add_argument("--house")
     p.set_defaults(fn=cmd_series)
+    p = sp.add_parser("font-fallback", help="Roboto Condensed from Google Fonts for some/all type roles")
+    p.add_argument("series"); p.add_argument("--roles", default="display,text,subtitle")
+    p.add_argument("--root"); p.add_argument("--house"); p.set_defaults(fn=cmd_font_fallback)
     p = sp.add_parser("package"); p.add_argument("plan"); p.add_argument("out"); p.set_defaults(fn=cmd_package)
     a = ap.parse_args()
     a.fn(a)

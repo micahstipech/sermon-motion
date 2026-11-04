@@ -116,7 +116,13 @@ def scan(folder):
             inv["example"] = rel.replace("\\", "/")
         elif ext in FONT_OK:
             fam, style, avg = _font_names(full)
-            inv["fonts"].append({"file": rel.replace("\\", "/"), "family": fam, "style": style, "avg_char": avg})
+            if not fam:
+                inv["problems"].append(f"{name} could not be read as a font. Is there a working .ttf/.otf? (Roboto Condensed stands in.)")
+                continue
+            rec = {"file": rel.replace("\\", "/"), "family": fam, "style": style, "avg_char": avg}
+            if fam == "Roboto Condensed" and name.startswith("RobotoCondensed-"):
+                rec["fallback"] = True  # our own Google Fonts fallback, not series art
+            inv["fonts"].append(rec)
         elif ext in FONT_WEB:
             inv["web_fonts"].append(rel.replace("\\", "/"))
         elif ext in (".txt", ".md", ".pdf", ".rtf", ".html") or stem.startswith(("license", "ofl", "readme")):
@@ -128,11 +134,12 @@ def scan(folder):
         inv["missing"].append("Background: a large square texture named 'Background' (more are welcome: 'Background 2', …).")
     if not inv["colors"]:
         inv["missing"].append("Colors: a photo named 'Colors' whose colours the series should use.")
-    if not inv["fonts"]:
+    if not [f for f in inv["fonts"] if not f.get("fallback")]:
+        meanwhile = " Meanwhile: Roboto Condensed from Google Fonts."
         if inv["web_fonts"]:
-            inv["missing"].append("Fonts: only web fonts (.woff/.woff2) were found. Resolve needs installable .ttf or .otf files of the same fonts.")
+            inv["missing"].append("Fonts: only web fonts (.woff/.woff2) were found. Resolve needs installable .ttf or .otf files of the same fonts." + meanwhile)
         else:
-            inv["missing"].append("Fonts: the series font files (.ttf or .otf).")
+            inv["missing"].append("Fonts: the series font files (.ttf or .otf)." + meanwhile)
     has_assets_dir = any(d.lower() == "assets" and os.path.isdir(os.path.join(folder, d)) for d in os.listdir(folder))
     if not has_assets_dir:
         inv["missing"].append("Assets: a folder named 'Assets' with the transparent PNGs from the series art (icons, logos, title cards).")
@@ -172,7 +179,7 @@ DEFAULT_SUBS = {"font": "subtitle", "size": 46, "color": "#FAF9F6", "y": 940, "s
                 "punctuation": "drop-trailing", "case": "as-spoken"}
 
 
-def draft_kit(inv, analysis):
+def draft_kit(inv, analysis, fallback_fonts=None):
     """A starting kit from the folder. Every value marked draft is a decision for the designer."""
     colors = (analysis or {}).get("colors") or {}
     roles = dict(colors.get("suggested_roles") or {})
@@ -186,7 +193,7 @@ def draft_kit(inv, analysis):
             pal[role] = {"hex": h, "from": note}
     pal["light"] = {"hex": "#FAF9F6", "from": "type over footage: near-white, neutral"}
 
-    fonts = inv.get("fonts", [])
+    fonts = [f for f in inv.get("fonts", []) if not f.get("fallback")]
 
     def pick(pref):
         for p in pref:
@@ -197,6 +204,9 @@ def draft_kit(inv, analysis):
     display = pick(["regular", "book", "medium", "bold"])
     text = pick(["medium", "regular", "book"])
     types = {}
+    if not fonts and fallback_fonts:
+        from .fonts import fallback_roles
+        types = fallback_roles(fallback_fonts, ("display", "text", "subtitle"))
     for role, f in (("display", display), ("text", text), ("subtitle", text)):
         if f:
             types[role] = {"family": f.get("family") or "?", "style": f.get("style") or "Regular",
@@ -216,7 +226,7 @@ def draft_kit(inv, analysis):
                       "use": "draft: full-frame cards" if i == 0 else "draft: alternate"} for i, b in enumerate(inv.get("backgrounds", []))],
         "assets": [{"id": a["id"], "file": a["file"], "kind": a["kind"], "w": a.get("w"), "h": a.get("h"),
                     "use": "draft"} for a in inv.get("assets", [])],
-        "available_fonts": fonts,
+        "available_fonts": fonts + list(fallback_fonts or []),
         "type": types,
         "scale": {"title": 84, "phrase": 64, "label": 30, "subtitle": 46},
         "motion": dict(DEFAULT_MOTION),

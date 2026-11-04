@@ -66,6 +66,9 @@ flags house looks. It is a starting point; you decide, and you record every swat
 
 - **The given font** is `display` when it is a display or serif face, or `text` when it is a plain
   sans. Read its family and style names exactly as the OS shows them, because Fusion matches on these.
+- **No usable or legible fonts → Roboto Condensed** from Google Fonts, for all roles or only the
+  roles the series font can't carry ([series-folder.md](series-folder.md) §5b,
+  `mg.py font-fallback`).
 - **At most two families.** Pair only if needed: a serif display with a quiet sans for references
   and subtitles, or a sans display with the same sans at another weight. Choose the partner by
   structure (x-height, stroke contrast), not by trend. Never pair two display faces.
