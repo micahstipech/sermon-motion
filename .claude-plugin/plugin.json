@@ -1,0 +1,7 @@
+{
+  "name": "stipech-motion",
+  "version": "0.1.0",
+  "description": "Motion-graphics designer for sermon video in DaVinci Resolve: storyboard and mood board gates, style kits from series art, restrained Fusion graphics and 2–3 word Text+ subtitles.",
+  "author": {"name": "Micah Stipech"},
+  "keywords": ["motion graphics", "davinci resolve", "fusion", "subtitles", "sermon", "church"]
+}

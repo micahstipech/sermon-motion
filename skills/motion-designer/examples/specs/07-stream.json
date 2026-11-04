@@ -1,0 +1,8 @@
+{
+ "id": "07-stream", "kind": "keyword", "duration": 4.5, "fps": 24, "in": 212.8,
+ "line": "planted by the water, sending out its roots by the stream",
+ "layers": [
+  {"id": "word", "type": "text", "text": "by the stream", "font": "italic", "size": 96, "color": "light",
+   "x": 1440, "y": 300, "align": "center", "in": {"treatment": "track-in", "at": 0.1, "from": 0.18}, "out": {"treatment": "fade", "at": 4.4}}
+ ]
+}

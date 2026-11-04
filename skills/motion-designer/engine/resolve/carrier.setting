@@ -1,0 +1,30 @@
+{
+	Tools = ordered() {
+		SMCarrier = MacroOperator {
+			CtrlWZoom = false,
+			Inputs = ordered() {
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "SMCarrierCanvas",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 0, 0 } },
+			Tools = ordered() {
+				SMCarrierCanvas = Background {
+					CtrlWZoom = false,
+					Inputs = {
+						GlobalOut = Input { Value = 119, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						TopLeftAlpha = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 0, 0 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "SMCarrier"
+}

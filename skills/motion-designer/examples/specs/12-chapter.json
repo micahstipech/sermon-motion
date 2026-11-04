@@ -1,0 +1,10 @@
+{
+ "id": "12-chapter", "kind": "chapter", "duration": 3.5, "fps": 24, "in": 611.0,
+ "line": "So how do you actually put roots down?",
+ "layers": [
+  {"id": "num", "type": "text", "text": "02", "font": "text", "size": 30, "small": true, "color": "sage", "tracking": 0.1,
+   "x": 160, "y": 470, "align": "left", "in": {"treatment": "cut", "at": 0.25}, "out": {"treatment": "fade", "at": 3.4}},
+  {"id": "head", "type": "text", "text": "Putting roots down", "font": "display", "size": 72, "color": "light",
+   "x": 160, "y": 530, "align": "left", "in": {"treatment": "wipe", "at": 0.3}, "out": {"treatment": "wipe", "at": 3.4}}
+ ]
+}

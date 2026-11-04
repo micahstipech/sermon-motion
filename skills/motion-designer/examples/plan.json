@@ -1,0 +1,12 @@
+{
+ "project": "2026-11-08 Rooted · Week 1",
+ "fps": 24, "width": 1920, "height": 1080,
+ "kit": "kit/kit.json",
+ "tracks": {"graphics": 3, "subtitles": 4},
+ "graphics": [
+  {"id": "03-rooted-title", "spec": "specs/03-rooted-title.json", "in": 74.2, "render": "out/03-rooted-title_1m14s20.mov"},
+  {"id": "07-stream", "spec": "specs/07-stream.json", "in": 212.8},
+  {"id": "12-chapter", "spec": "specs/12-chapter.json", "in": 611.0}
+ ],
+ "subtitles": "subtitles.json"
+}
