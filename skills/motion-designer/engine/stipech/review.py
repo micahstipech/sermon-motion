@@ -39,6 +39,13 @@ svg.strip{width:100%;height:46px;display:block}
 .media img,.media video{width:100%;border-radius:8px;display:block;background:#888}
 .spec{font-size:44px;line-height:1.15;margin:4px 0 2px;word-break:break-word}
 ul.plain{margin:0;padding-left:18px}
+.checker{background-color:#fff;background-image:linear-gradient(45deg,#e6e6e6 25%,transparent 25%,transparent 75%,#e6e6e6 75%),linear-gradient(45deg,#e6e6e6 25%,transparent 25%,transparent 75%,#e6e6e6 75%);background-size:20px 20px;background-position:0 0,10px 10px;border-radius:8px;padding:12px}
+.assets{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.assets img{width:100%;height:150px;object-fit:contain;display:block}
+.picked{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.picked .chipc{height:56px}
+.unused{opacity:.45}
+.draft{background:var(--warn);color:var(--bg);padding:8px 12px;border-radius:8px;margin:12px 0;font-weight:600}
 .approve{margin-top:40px;padding:16px;border-left:3px solid var(--ink);background:var(--card)}
 @media (max-width:640px){.beat{grid-template-columns:1fr}.spec{font-size:32px}}
 """
@@ -158,6 +165,39 @@ def moodboard(mb, kit, kit_root, out_path, base_dir):
         return '<div class="media">' + "".join(out) + "</div>"
 
     sources = media(mb.get("sources"), "image")
+
+    def krel(path):
+        return _e(_rel(os.path.join(kit_root or ".", path), out_dir))
+
+    series_parts = ""
+    src = kit.get("sources") or {}
+    if src.get("example"):
+        series_parts += (f'<h2>Example (how the series art fits together)</h2><figure style="margin:0">'
+                         f'<img src="{krel(src["example"])}" alt="" style="width:100%;border-radius:8px"></figure>')
+    ca = kit.get("color_analysis") or {}
+    if ca.get("swatches"):
+        picked = ca.get("picked") or {}
+        cells = []
+        for w in ca["swatches"]:
+            use = picked.get(w["hex"]) or next((r for r, v in pal.items()
+                                               if (v["hex"] if isinstance(v, dict) else v).upper() == w["hex"].upper()), None)
+            cls = "" if use and not str(use).startswith("not used") else ' class="unused"'
+            cells.append(f'<div{cls}><div class="chipc" style="background:{_e(w["hex"])}"></div>'
+                         f'<div class="tc">{_e(w["hex"])} · {w["share"] * 100:.0f}%</div><div class="tc">{_e(use or "not used")}</div></div>')
+        img = f'<img src="{krel(ca["image"])}" alt="" style="width:100%;max-width:420px;border-radius:8px;display:block;margin-bottom:12px">' if ca.get("image") else ""
+        series_parts += f'<h2>From the Colors photo</h2><div class="card">{img}<div class="picked">{"".join(cells)}</div></div>'
+    tex = kit.get("textures") or []
+    if tex:
+        items = "".join(f'<figure style="margin:0"><img src="{krel(t["file"])}" alt="" style="aspect-ratio:1;object-fit:cover">'
+                        f'<figcaption class="tc" style="margin-top:6px">{_e(t["file"])} · {_e(t.get("use", ""))}</figcaption></figure>' for t in tex)
+        series_parts += f'<h2>Backgrounds</h2><div class="media">{items}</div>'
+    assets = kit.get("assets") or []
+    if assets:
+        items = "".join(f'<figure style="margin:0"><div class="checker"><img src="{krel(a["file"])}" alt=""></div>'
+                        f'<figcaption class="tc" style="margin-top:6px">{_e(a["file"])} · {_e(a.get("kind", ""))}'
+                        f'{" · brand" if a.get("brand") else ""}<br>{_e(a.get("use", ""))}</figcaption></figure>' for a in assets)
+        series_parts += f'<h2>Assets</h2><div class="assets">{items}</div>'
+    draft = '<div class="draft">This kit is still a draft: the values below are suggestions to approve or change.</div>' if kit.get("draft") else ""
     lists = ""
     for key, title in (("signature_moves", "Signature moves for this series"), ("treatments", "Treatments in rotation"), ("avoid", "Deliberately avoiding")):
         vals = mb.get(key) or kit.get(key) or []
@@ -169,8 +209,9 @@ def moodboard(mb, kit, kit_root, out_path, base_dir):
 <title>Mood board {_e(mb.get('project', ''))}</title><style>{faces}\n{CSS}</style></head><body><main>
 <p class="tc">Mood board · gate 2 of 2</p>
 <h1>{_e(kit.get('series', mb.get('series', '')))}</h1>
-<p class="lede">{_e(mb.get('direction') or kit.get('personality', ''))}</p>
-<h2>Taken from</h2>{sources}
+{draft}<p class="lede">{_e(mb.get('direction') or kit.get('personality', ''))}</p>
+{('<h2>Taken from</h2>' + sources) if mb.get('sources') else ''}
+{series_parts}
 <h2>Palette</h2><div class="card sw">{''.join(sw)}</div>
 <h2>Type</h2><div class="grid">{''.join(specimens)}</div>
 <h2>Motion</h2><div class="card"><div class="meta"><span>Tempo ×{_e(m.get('tempo', 1.0))}</span><span>Travel {_e(m.get('distance', 24))}px</span>

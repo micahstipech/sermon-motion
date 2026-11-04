@@ -14,6 +14,8 @@
   moodboard MB.json --kit K      mood board approval page
   ledger check|add BOARD.json    variation ledger
   package PLAN.json OUT          folder for the editing PC (Resolve)
+  series NAME|PATH [--draft]     scan a "Sermon Series/<name>" folder; analyse Colors; draft kit.json
+  series --list                  list series folders and their kit status
 """
 import argparse
 import glob
@@ -192,6 +194,55 @@ def _house(a):
     return h
 
 
+def _series_root(a=None):
+    r = getattr(a, "root", None) or os.environ.get("STIPECH_SERIES")
+    cfg = os.path.expanduser("~/.stipech-motion/config.json")
+    if not r and os.path.exists(cfg):
+        r = S.load_json(cfg).get("series_root")
+    if not r:
+        h = _house(a) if a else None
+        if h:
+            r = os.path.join(h, "Sermon Series")
+    return r
+
+
+def cmd_series(a):
+    from stipech import series
+    root = _series_root(a)
+    if a.list:
+        if not root or not os.path.isdir(root):
+            sys.exit(f"no Sermon Series folder at {root!r}; set series_root in ~/.stipech-motion/config.json (or run /mg-setup)")
+        for d in sorted(os.listdir(root)):
+            p = os.path.join(root, d)
+            if os.path.isdir(p) and not d.startswith((".", "_")):
+                kit = os.path.join(p, "kit.json")
+                state = "no kit" if not os.path.exists(kit) else ("draft kit" if S.load_json(kit).get("draft") else "kit approved")
+                print(f"{d:40} {state}")
+        return
+    if not a.name:
+        sys.exit("give a series name or folder path")
+    folder = a.name if os.path.isdir(a.name) else (os.path.join(root, a.name) if root else a.name)
+    inv = series.scan(folder)
+    print(series.summary(inv))
+    an = series.analyse_colors(inv) if (inv["colors"] or inv["backgrounds"]) else {}
+    if an.get("colors"):
+        print(f"\nColors photo ({inv['colors']}):")
+        for w in an["colors"]["swatches"]:
+            print(f"  {w['hex']}  {w['share'] * 100:5.1f}%  L{w['L']:5.1f}  C{w['chroma']:5.1f}  h{w['hue']:4}")
+        print("  suggested roles:", json.dumps(an["colors"]["suggested_roles"]))
+        for w in an["colors"]["warnings"]:
+            print("  WARNING:", w)
+    kit = os.path.join(inv["folder"], "kit.json")
+    if a.draft:
+        if os.path.exists(kit) and not a.force:
+            print(f"\nkit.json exists; not overwritten (use --force). {kit}")
+        else:
+            with open(kit, "w", encoding="utf-8") as f:
+                json.dump(series.draft_kit(inv, an), f, indent=1)
+            print(f"\ndraft kit -> {kit}  (finish it: references/style-intake.md, then remove \"draft\")")
+    sys.exit(2 if inv["missing"] else 0)
+
+
 def cmd_ledger(a):
     from stipech import ledger
     h = _house(a)
@@ -260,6 +311,10 @@ def main():
     p.add_argument("--house"); p.set_defaults(fn=cmd_ledger)
     p = sp.add_parser("storyboard"); p.add_argument("board"); p.add_argument("--out"); p.add_argument("--house"); p.set_defaults(fn=cmd_storyboard)
     p = sp.add_parser("moodboard"); p.add_argument("mb"); p.add_argument("--kit", required=True); p.add_argument("--out"); p.set_defaults(fn=cmd_moodboard)
+    p = sp.add_parser("series"); p.add_argument("name", nargs="?"); p.add_argument("--list", action="store_true")
+    p.add_argument("--draft", action="store_true", help="write a draft kit.json into the series folder")
+    p.add_argument("--force", action="store_true"); p.add_argument("--root"); p.add_argument("--house")
+    p.set_defaults(fn=cmd_series)
     p = sp.add_parser("package"); p.add_argument("plan"); p.add_argument("out"); p.set_defaults(fn=cmd_package)
     a = ap.parse_args()
     a.fn(a)

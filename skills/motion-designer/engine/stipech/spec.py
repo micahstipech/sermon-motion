@@ -265,3 +265,47 @@ def fps_value(fps):
 
 def kit_dir(kit_path):
     return os.path.dirname(os.path.abspath(kit_path))
+
+
+# ---------------------------------------------------------------- images (stdlib, also inside Resolve)
+def image_size(path):
+    """(width, height) of a PNG or JPEG without Pillow, or None."""
+    import struct
+    try:
+        with open(path, "rb") as f:
+            head = f.read(26)
+            if head[:8] == b"\x89PNG\r\n\x1a\n":
+                return struct.unpack(">II", head[16:24])
+            if head[:2] == b"\xff\xd8":
+                f.seek(2)
+                while True:
+                    marker = f.read(2)
+                    if len(marker) < 2 or marker[0] != 0xFF:
+                        return None
+                    if marker[1] in (0xD8, 0x01) or 0xD0 <= marker[1] <= 0xD7:
+                        continue
+                    seg = struct.unpack(">H", f.read(2))[0]
+                    if marker[1] in (0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF):
+                        h, w = struct.unpack(">xHH", f.read(5))
+                        return (w, h)
+                    f.seek(seg - 2, 1)
+    except OSError:
+        pass
+    return None
+
+
+def image_fit(layer, native, W, H):
+    """Display size (w, h) in px for an image layer: fit cover/contain to the frame, or `w` px wide."""
+    nw, nh = native
+    fit = layer.get("fit")
+    if fit == "cover":
+        s = max(W / nw, H / nh) * float(layer.get("zoom", 1.0))
+    elif fit == "contain":
+        s = min(W / nw, H / nh) * float(layer.get("zoom", 1.0))
+    elif layer.get("w"):
+        s = float(layer["w"]) / nw
+    elif layer.get("h"):
+        s = float(layer["h"]) / nh
+    else:
+        s = 1.0
+    return nw * s, nh * s, s

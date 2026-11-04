@@ -11,9 +11,8 @@ Values marked CALIBRATE are the ones to confirm on first contact with Resolve
 (see references/resolve.md, "Calibration").
 """
 import os
-import struct
 
-from .spec import EASES, font_for, resolve_color, estimate_text_width, text_block_height, fps_value
+from .spec import EASES, font_for, resolve_color, estimate_text_width, text_block_height, fps_value, image_size, image_fit
 
 # CALIBRATE: Text+ Size is relative to frame width (1.0 = text as tall as the frame is wide).
 TEXT_SIZE_PER_PX = 1.0 / 1920.0
@@ -161,17 +160,6 @@ class Comp:
         return 1.0 - py / self.H
 
 
-def _png_size(path):
-    try:
-        with open(path, "rb") as f:
-            head = f.read(24)
-        if head[:8] == b"\x89PNG\r\n\x1a\n":
-            return struct.unpack(">II", head[16:24])
-    except OSError:
-        pass
-    return None
-
-
 def _merged_keys(tracks, names):
     times = sorted({k[0] for n in names for k in tracks.get(n, [])})
     return times
@@ -240,22 +228,24 @@ def build(spec, kit, asset_root=None):
                 "ViewInfo": Lua(f"OperatorInfo {{ Pos = {{ {x}, -99 }} }}"),
             })
             pivot = [c.nx(lx), c.ny(ly)]
-        else:  # image
+        else:  # image (asset PNG, or a background texture with fit: cover)
             path = layer["src"]
             if asset_root and not os.path.isabs(path):
                 path = os.path.join(asset_root, path)
             path = os.path.abspath(path)
-            native = _png_size(path) or (int(layer.get("native_w", 1000)), int(layer.get("native_h", 1000)))
+            native = image_size(path) or (int(layer.get("native_w", 1000)), int(layer.get("native_h", 1000)))
+            fmt = {".png": "PNGFormat", ".jpg": "JpegFormat", ".jpeg": "JpegFormat",
+                   ".tif": "TiffFormat", ".tiff": "TiffFormat"}.get(os.path.splitext(path)[1].lower(), "PNGFormat")
             src = c.add(lid, "Loader", {
                 "Clips": Lua("{ Clip { ID = \"Clip1\", Filename = " + lua(path) +
-                             ", FormatID = \"PNGFormat\", StartFrame = -1, LengthSetManually = true, TrimIn = 0, "
+                             f", FormatID = \"{fmt}\", StartFrame = -1, LengthSetManually = true, TrimIn = 0, "
                              f"TrimOut = 0, ExtendFirst = 0, ExtendLast = {dur_frames}, Loop = 1, AspectMode = 0, "
                              f"Depth = 0, TimeCode = 0, GlobalStart = 0, GlobalEnd = {dur_frames} }}, }}"),
                 "Inputs": {"Loop": inp_value(1), "PostMultiplyByAlpha": inp_value(0)},
                 "ViewInfo": Lua(f"OperatorInfo {{ Pos = {{ {x}, -99 }} }}"),
             })
             pivot = [0.5, 0.5]
-            layer["_img_scale"] = float(layer.get("w", native[0])) / native[0]
+            layer["_img_scale"] = image_fit(layer, native, W, H)[2]
         node = src
 
         # ---------------- blur

@@ -9,7 +9,7 @@ Stipech Motion merges ideas, methods and some code from these MIT-licensed proje
 | [Anil-matcha/vox-ai-motion-graphics-generator](https://github.com/Anil-matcha/vox-ai-motion-graphics-generator) | narrative arc library, shot vocabulary, the idea of a per-theme style catalogue | MIT |
 | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (© 2025 Corey Haines) | reverse-engineering a reference edit into signature moves, the living taste-rules file, the "no AI tells" copy rules, caption basics | MIT |
 
-Example fonts in `skills/motion-designer/examples/kit/fonts/`: Caladea (SIL OFL 1.1, Huerta Tipográfica), Inter (SIL OFL 1.1, Rasmus Andersson). Licence texts are next to the files.
+Example fonts in `skills/motion-designer/examples/Sermon Series/Rooted/`: Caladea (SIL OFL 1.1, Huerta Tipográfica), Inter (SIL OFL 1.1, Rasmus Andersson). Licence texts are next to the files.
 
 MIT licence text (applies to the portions above):
 

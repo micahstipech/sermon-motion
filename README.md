@@ -2,7 +2,8 @@
 
 A Claude Code plugin that works as a motion-graphics designer for sermon video in DaVinci Resolve.
 
-Give it a sermon (a timeline export and a transcript) plus the series art and font. It reads the
+Give it a sermon (a timeline export and a transcript) and the name of the series folder in
+`Sermon Series/`. It reads the
 sermon, proposes where graphics belong, and turns the art into a style kit. After you approve a
 **storyboard** and then a **mood board**, it builds restrained B-roll graphics as editable Fusion
 comps on **V3** and clean 2–3 word Text+ subtitles on **V4** (going up a track whenever something is
@@ -43,13 +44,28 @@ On the editing PC, setup also installs the Resolve pieces.
 |---|---|
 | `/mg` | The whole pipeline, stopping at both approval gates |
 | `/mg-setup` | First-run setup on this machine |
-| `/mg-style` | Series art + font → style kit (palette with sources, type, motion personality, signature moves) |
+| `/mg-series` | Scan a `Sermon Series/<name>` folder, ask for anything missing, analyse Colors, draft the kit |
+| `/mg-style` | Finish the series style kit (palette picked from Colors, type, backgrounds, assets, motion, signature moves) |
 | `/mg-decode` | A reference video or image → signature moves and kit values |
 | `/mg-storyboard` | Read the sermon → storyboard page (**gate 1**) |
 | `/mg-moodboard` | Kit + key graphics → mood board page with motion samples (**gate 2**) |
 | `/mg-build` | Build, lint, check over real footage, render fallbacks, package for Resolve |
 | `/mg-resolve` | Place the package on the open timeline |
 | `/mg-learn` | Turn feedback into house rules; record the video in the variation ledger |
+
+## Adding a new sermon series
+
+Make a folder `house/Sermon Series/<Series Name>/` (or wherever `series_root` points) containing:
+
+| File | What it is |
+|---|---|
+| `Background.jpg` / `.png` | large square texture used as the background (extras: `Background 2`, …) |
+| `Colors.jpg` / `.png` | a photo whose colours the series uses; the skill analyses it and picks |
+| font files (`.ttf` / `.otf`) | the series fonts |
+| `Example.png` | everything used together |
+| `Assets/` | transparent PNGs: icons, logos, title cards, other art elements |
+
+Then run `/mg-series <Series Name>`. If anything is missing, the skill asks for it.
 
 ## How it works
 
@@ -61,7 +77,7 @@ intake ─► storyboard ─► [approve] ─► style kit + mood board ─► [
   timing). The engine writes it as a Fusion comp (Text+ → Blur → Transform → Merge, with
   BezierSpline keyframes carrying the eases) and as an HTML page. The HTML page is used for previews,
   mood-board stills and the ProRes 4444 fallback render. Timing and eases match exactly.
-- **The style is an input; the thinking is fixed.** A new series changes only `house/series/<slug>/kit.json`.
+- **The style is an input; the thinking is fixed.** A new series is a folder in `Sermon Series/` (Background, Colors, fonts, Example.png, Assets/); the skill scans it, asks for anything missing, and writes the series `kit.json` there.
 - **Never the same twice.** `house/ledger.json` remembers every video's intro, outro and treatments,
   and the storyboard check fails on repeats. Brand assets are exempt.
 - **Restraint is checked by machine.** `mg.py lint` catches:
@@ -87,7 +103,7 @@ skills/motion-designer/
   engine/stills.js       stills and contact sheets over real footage frames
   engine/resolve/        place.py, install.py, SM Carrier title
   examples/              a worked example series ("Rooted"): kit, specs, storyboard, mood board, plan
-house/                   brand assets, series kits, rules.md, ledger.json (shared memory)
+house/                   brand assets, Sermon Series/ (one folder per series), rules.md, ledger.json
 tests/run.sh             end-to-end check on the example
 ```
 

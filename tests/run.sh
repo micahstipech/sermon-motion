@@ -5,14 +5,16 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SK="$ROOT/skills/motion-designer"; EX="$SK/examples"; MG="python3 $SK/engine/mg.py"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 cd "$EX"
-echo "== lint";        $MG lint 'specs/*.json' --kit kit/kit.json
-echo "== build";       for s in specs/*.json; do $MG build "$s" --kit kit/kit.json --out build >/dev/null; done; ls build
+K="Sermon Series/Rooted/kit.json"
+echo "== series folder"; $MG series "Sermon Series/Rooted"
+echo "== lint";        $MG lint 'specs/*.json' --kit "$K"
+echo "== build";       for s in specs/*.json; do $MG build "$s" --kit "$K" --out build >/dev/null; done; ls build
 if python3 -c "import lupa" 2>/dev/null; then echo "== lua parse"; python3 "$ROOT/tests/check_lua.py" build/*.comp build/*.setting "$SK/engine/resolve/carrier.setting"; else echo "(skip lua parse: pip install lupa)"; fi
-echo "== subtitles";   $MG chunk words.json --kit kit/kit.json --out "$TMP/subtitles.json"
-echo "== palette";     $MG palette kit/art.jpg | tail -2
+echo "== subtitles";   $MG chunk words.json --kit "$K" --out "$TMP/subtitles.json"
+echo "== palette";     $MG palette "Sermon Series/Rooted/Colors.jpg" | tail -2
 echo "== ledger";      $MG ledger check storyboard.json --house "$TMP/house"
 echo "== review";      $MG storyboard storyboard.json --out "$TMP/review/storyboard.html" --house "$TMP/house" >/dev/null
-                       $MG moodboard moodboard.json --kit kit/kit.json --out "$TMP/review/moodboard.html" >/dev/null; echo ok
+                       $MG moodboard moodboard.json --kit "$K" --out "$TMP/review/moodboard.html" >/dev/null; echo ok
 if node -e "require('playwright')" 2>/dev/null; then
   echo "== stills + alpha render"
   node "$SK/engine/stills.js" build/03-rooted-title.html "$TMP/stills" 1.0 3.0 --over '#6E6B66' >/dev/null
@@ -26,6 +28,6 @@ p = json.load(open("plan.json")); p["subtitles"] = sys.argv[1] + "/subtitles.jso
 for g in p["graphics"]: g.pop("render", None)
 json.dump(p, open(sys.argv[1] + "/plan.json", "w"))
 PY
-cp -r kit specs "$TMP/"; $MG package "$TMP/plan.json" "$TMP/pkg"
+cp -r "Sermon Series" specs "$TMP/"; $MG package "$TMP/plan.json" "$TMP/pkg"
 python3 "$ROOT/tests/mock_resolve.py" "$TMP/pkg"
 echo "ALL OK"

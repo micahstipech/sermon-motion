@@ -33,7 +33,7 @@ def _summary(board):
         "series": board.get("series"),
         "intro": {k: (board.get("intro") or {}).get(k) for k in ("kind", "treatment_in", "zone", "idea")},
         "outro": {k: (board.get("outro") or {}).get(k) for k in ("kind", "treatment_in", "zone", "idea")},
-        "graphics": [{k: b.get(k) for k in ("kind", "treatment_in", "treatment_out", "zone")} for b in beats],
+        "graphics": [{k: b.get(k) for k in ("kind", "treatment_in", "treatment_out", "zone", "background")} for b in beats],
     }
 
 

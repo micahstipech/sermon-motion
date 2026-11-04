@@ -9,7 +9,7 @@ import json
 import mimetypes
 import os
 
-from .spec import EASES, font_for, resolve_color, estimate_text_width, text_block_height
+from .spec import EASES, font_for, resolve_color, estimate_text_width, text_block_height, image_size, image_fit
 
 FONT_MIME = {".otf": "font/otf", ".ttf": "font/ttf", ".woff": "font/woff", ".woff2": "font/woff2"}
 
@@ -17,6 +17,29 @@ FONT_MIME = {".otf": "font/otf", ".ttf": "font/ttf", ".woff": "font/woff", ".wof
 def _b64(path):
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode("ascii")
+
+
+def _image_data(path, dw, dh):
+    """Embed an image; big textures (8K squares) are downscaled to what the frame shows, if Pillow is here."""
+    mime = mimetypes.guess_type(path)[0] or "image/png"
+    try:
+        from PIL import Image
+        import io
+        with Image.open(path) as im:
+            if im.width > dw * 1.5 and im.height > dh * 1.5:
+                im = im.copy()
+                im.thumbnail((int(dw * 1.25), int(dh * 1.25)), Image.LANCZOS)
+                buf = io.BytesIO()
+                if im.mode in ("RGBA", "LA", "P"):
+                    im.save(buf, "PNG")
+                    mime = "image/png"
+                else:
+                    im.convert("RGB").save(buf, "JPEG", quality=92)
+                    mime = "image/jpeg"
+                return mime, base64.b64encode(buf.getvalue()).decode("ascii")
+    except ImportError:
+        pass
+    return mime, _b64(path)
 
 
 def _rgba(c):
@@ -76,11 +99,12 @@ def build(spec, kit, kit_root=None, asset_root=None, background=None):
             path = layer["src"]
             if asset_root and not os.path.isabs(path):
                 path = os.path.join(asset_root, path)
-            mime = mimetypes.guess_type(path)[0] or "image/png"
-            w = layer.get("w")
-            item["w"] = float(w) if w else None
-            html_layers.append(f'<div class="L" id="{layer["id"]}"><img src="data:{mime};base64,{_b64(path)}" '
-                               f'style="{f"width:{w}px;" if w else ""}display:block"></div>')
+            native = image_size(path) or (int(layer.get("native_w", 1000)), int(layer.get("native_h", 1000)))
+            dw, dh, _ = image_fit(layer, native, W, H)
+            mime, data = _image_data(path, dw, dh)
+            item["w"], item["h"] = dw, dh
+            html_layers.append(f'<div class="L" id="{layer["id"]}"><img src="data:{mime};base64,{data}" '
+                               f'style="width:{dw:.1f}px;height:{dh:.1f}px;display:block"></div>')
         layers.append(item)
 
     bg_css = "transparent"

@@ -1,0 +1,279 @@
+{
+ "series": "Rooted",
+ "personality": "Calm, warm, precise, human, established. Printed paper and quiet sage: the graphics should feel set in type, not animated.",
+ "sources": {
+  "backgrounds": [
+   "Background.jpg",
+   "Background 2.jpg"
+  ],
+  "colors": "Colors.jpg",
+  "example": "Example.png",
+  "fonts": [
+   "Caladea-Italic.ttf",
+   "Caladea-Regular.ttf",
+   "Inter-Medium.otf",
+   "Inter-Regular.otf"
+  ],
+  "assets": [
+   "Assets/Icon - Tree.png",
+   "Assets/Logo.png",
+   "Assets/Title Card.png"
+  ]
+ },
+ "palette": {
+  "ground": {
+   "hex": "#ECE9E2",
+   "share": 70,
+   "from": "Colors.jpg #ECE9E2 (28%), the paper; matches Background.jpg"
+  },
+  "surface": {
+   "hex": "#D6CEC1",
+   "share": 15,
+   "from": "Colors.jpg #D6CEC1 (20%), the lower band"
+  },
+  "sage": {
+   "hex": "#B0BFAC",
+   "share": 8,
+   "from": "Colors.jpg #B0BFAC (32%); Background 2.jpg is this field"
+  },
+  "ink": {
+   "hex": "#242423",
+   "share": 5,
+   "from": "derived neutral; matches the ink of Title Card.png"
+  },
+  "accent": {
+   "hex": "#A9805F",
+   "share": 2,
+   "from": "Colors.jpg clay #C19F81, darkened 12 L to hold 3:1 on ground"
+  },
+  "light": {
+   "hex": "#FAF9F6",
+   "from": "type over footage: near-white, neutral"
+  }
+ },
+ "color_analysis": {
+  "image": "Colors.jpg",
+  "swatches": [
+   {
+    "hex": "#B0BFAC",
+    "rgb": [
+     176,
+     191,
+     172
+    ],
+    "share": 0.32,
+    "L": 75.7,
+    "chroma": 11.7,
+    "hue": 138
+   },
+   {
+    "hex": "#ECE9E2",
+    "rgb": [
+     236,
+     233,
+     226
+    ],
+    "share": 0.278,
+    "L": 92.4,
+    "chroma": 3.7,
+    "hue": 93
+   },
+   {
+    "hex": "#D6CEC1",
+    "rgb": [
+     214,
+     206,
+     193
+    ],
+    "share": 0.202,
+    "L": 83.1,
+    "chroma": 7.5,
+    "hue": 86
+   },
+   {
+    "hex": "#C19F81",
+    "rgb": [
+     193,
+     159,
+     129
+    ],
+    "share": 0.17,
+    "L": 67.8,
+    "chroma": 22.0,
+    "hue": 68
+   },
+   {
+    "hex": "#DEDBD2",
+    "rgb": [
+     222,
+     219,
+     210
+    ],
+    "share": 0.03,
+    "L": 87.4,
+    "chroma": 4.8,
+    "hue": 97
+   }
+  ],
+  "warnings": [],
+  "picked": {
+   "#ECE9E2": "ground",
+   "#D6CEC1": "surface",
+   "#B0BFAC": "sage (second family, rare)",
+   "#C19F81": "accent (darkened to #A9805F)",
+   "#DEDBD2": "not used: too close to ground"
+  }
+ },
+ "textures": [
+  {
+   "id": "background",
+   "file": "Background.jpg",
+   "w": 2400,
+   "h": 2400,
+   "use": "full-frame cards and verse cards (default)"
+  },
+  {
+   "id": "background-2",
+   "file": "Background 2.jpg",
+   "w": 2400,
+   "h": 2400,
+   "use": "the turn into application; at most once per video"
+  }
+ ],
+ "assets": [
+  {
+   "id": "title-card",
+   "file": "Assets/Title Card.png",
+   "kind": "title",
+   "w": 1800,
+   "h": 520,
+   "brand": true,
+   "use": "series name moments only; vary placement and entrance each week"
+  },
+  {
+   "id": "icon-tree",
+   "file": "Assets/Icon - Tree.png",
+   "kind": "icon",
+   "w": 600,
+   "h": 600,
+   "use": "the motif; small, never centred, max twice per video"
+  },
+  {
+   "id": "logo",
+   "file": "Assets/Logo.png",
+   "kind": "logo",
+   "w": 800,
+   "h": 200,
+   "brand": true,
+   "use": "outro only, when the church wants it"
+  }
+ ],
+ "available_fonts": [
+  {
+   "file": "Caladea-Italic.ttf",
+   "family": "Caladea",
+   "style": "Italic",
+   "avg_char": 0.403
+  },
+  {
+   "file": "Caladea-Regular.ttf",
+   "family": "Caladea",
+   "style": "Regular",
+   "avg_char": 0.41
+  },
+  {
+   "file": "Inter-Medium.otf",
+   "family": "Inter",
+   "style": "Medium",
+   "avg_char": 0.48
+  },
+  {
+   "file": "Inter-Regular.otf",
+   "family": "Inter",
+   "style": "Regular",
+   "avg_char": 0.477
+  }
+ ],
+ "type": {
+  "display": {
+   "family": "Caladea",
+   "style": "Regular",
+   "weight": 400,
+   "file": "Caladea-Regular.ttf",
+   "avg_char": 0.41,
+   "use": "titles, scripture, the one phrase"
+  },
+  "italic": {
+   "family": "Caladea",
+   "style": "Italic",
+   "weight": 400,
+   "file": "Caladea-Italic.ttf",
+   "avg_char": 0.4,
+   "use": "the human word inside a title"
+  },
+  "text": {
+   "family": "Inter",
+   "style": "Medium",
+   "weight": 500,
+   "file": "Inter-Medium.otf",
+   "avg_char": 0.48,
+   "use": "labels, references, names"
+  },
+  "subtitle": {
+   "family": "Inter",
+   "style": "Medium",
+   "weight": 500,
+   "file": "Inter-Medium.otf",
+   "avg_char": 0.48,
+   "use": "subtitles"
+  }
+ },
+ "scale": {
+  "title": 84,
+  "phrase": 64,
+  "label": 30,
+  "subtitle": 46
+ },
+ "motion": {
+  "tempo": 1.15,
+  "distance": 18,
+  "ease_in": "settle",
+  "ease_out": "exit",
+  "notes": "Slow in, quicker out. Small travel (18px). Type arrives like ink settling: rise-mask and track-in lead; cut is welcome on short labels."
+ },
+ "layout": {
+  "safe": 0.07,
+  "zones": [
+   "lower-left",
+   "upper-left",
+   "center",
+   "right-third"
+  ]
+ },
+ "subtitles": {
+  "font": "subtitle",
+  "size": 46,
+  "color": "#FAF9F6",
+  "y": 940,
+  "shadow": true,
+  "shadow_color": "#000000@35",
+  "shadow_blur": 6,
+  "tracking": 0.0,
+  "max_words": 3,
+  "max_chars": 24,
+  "punctuation": "drop-trailing",
+  "case": "as-spoken"
+ },
+ "signature_moves": [
+  "A hairline ink rule draws first, the words rise out of it (from the rule under the title in Example.png).",
+  "One italic word inside a roman title carries the human beat.",
+  "Scripture references set small in Inter caps, letter-spaced, never larger than the verse.",
+  "Graphics live in the left third; the speaker keeps the right. Full-frame cards keep Example.png's left-weighted layout."
+ ],
+ "avoid": [
+  "colour fields behind text over footage",
+  "blur-in entrances",
+  "centred everything",
+  "the tree icon as decoration"
+ ]
+}

@@ -96,7 +96,11 @@ def lab_to_hex(L, a, b):
 def suggest_roles(sw):
     """A starting point only: the designer decides. Value first, scarce accent, neutral type."""
     by_share = sorted(sw, key=lambda s: -s["share"])
-    ground = by_share[0]
+    # Keep it light: the ground is the lightest colour with a real presence (>= 10 %), if it is light;
+    # otherwise the dominant colour (dark art stays dark only when the art itself is dark).
+    big = [s for s in by_share if s["share"] >= 0.10]
+    light = max(big, key=lambda s: s["L"], default=None)
+    ground = light if light and light["L"] >= 70 else by_share[0]
     rest = [s for s in sw if s is not ground]
     ink = max(rest, key=lambda s: contrast(s["rgb"], ground["rgb"])) if rest else ground
     surface = min((s for s in rest if s is not ink), key=lambda s: abs(s["L"] - ground["L"]) + s["chroma"] * 0.3,

@@ -1,12 +1,44 @@
 {
- "project": "2026-11-08 Rooted · Week 1",
+ "project": "2026-11-08 Rooted \u00b7 Week 1",
  "series": "Rooted",
  "direction": "Calm, warm, precise. Type set like a printed program: a serif that feels read aloud, a quiet sans for references, all in near-white over the footage and the art's own paper and sage when a frame is full.",
  "specimen_text": "Nothing has roots",
- "sources": [{"image": "kit/art.jpg", "caption": "Series art (example placeholder)"}],
- "motion": [{"video": "review/motion/03-rooted-title.mp4", "caption": "03 · rule draws, title rises out of it, reference fades in"}],
- "stills": [{"image": "review/stills/07-stream_1.80.png", "caption": "07 · keyword in the right third, italic"},
-            {"image": "review/stills/sub-sample_0.30.png", "caption": "Subtitles · Inter Medium 46px, near-white, soft shadow, 2–3 words"}],
- "treatments": [{"name": "rise-mask", "use": "titles and verses"}, {"name": "track-in", "use": "single words and the series name"},
-                {"name": "wipe", "use": "chapter turns"}, {"name": "cut", "use": "small labels and numbers"}]
+ "motion": [
+  {
+   "video": "review/motion/03-rooted-title.mp4",
+   "caption": "03 \u00b7 rule draws, title rises out of it, reference fades in"
+  }
+ ],
+ "stills": [
+  {
+   "image": "review/stills/20-verse-card_3.00.png",
+   "caption": "20 \u00b7 verse card on Background.jpg, tree icon from Assets"
+  },
+  {
+   "image": "review/stills/07-stream_1.80.png",
+   "caption": "07 \u00b7 keyword in the right third, italic"
+  },
+  {
+   "image": "review/stills/sub-sample_0.30.png",
+   "caption": "Subtitles \u00b7 Inter Medium 46px, near-white, soft shadow, 2\u20133 words"
+  }
+ ],
+ "treatments": [
+  {
+   "name": "rise-mask",
+   "use": "titles and verses"
+  },
+  {
+   "name": "track-in",
+   "use": "single words and the series name"
+  },
+  {
+   "name": "wipe",
+   "use": "chapter turns"
+  },
+  {
+   "name": "cut",
+   "use": "small labels and numbers"
+  }
+ ]
 }

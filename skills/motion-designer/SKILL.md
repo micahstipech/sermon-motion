@@ -46,7 +46,10 @@ repeating itself.
   - `rules.md`: everything the user has taught you, one line per rule. **Read it before every
     project.**
   - `ledger.json`: what each video used ([variation.md](references/variation.md)).
-  - `series/<slug>/`: one style kit per sermon series: `kit.json`, the art, the fonts, textures.
+  - `Sermon Series/<Series Name>/`: one folder per sermon series, in a fixed shape (Background,
+    Colors, fonts, Example.png, Assets/). Its `kit.json` is the series style kit. See
+    [series-folder.md](references/series-folder.md). The location is `series_root` in the config
+    (default `<house>/Sermon Series`).
 - **Project folder** `motion/` inside the user's working folder for this sermon:
   `inputs/` (video, transcript, notes), `work/` (video.json, words, subtitles),
   `storyboard.json`, `moodboard.json`, `specs/`, `build/`, `review/`, `out/`, `plan.json`.
@@ -64,8 +67,9 @@ the user can answer "fine" or correct a line:
   is measured from the timeline start, so a timeline export keeps the graphics in sync with the edit.
 - **Transcript.** An SRT/VTT or word-level JSON. If there is none, transcribe it
   (`mg.py transcribe`, using the speaker's name, the church and the books cited as `--prompt`).
-- **Series**: an existing kit in `house/series/`, or new art + font, which means the style
-  intake at step 2.
+- **Series**: the name of its folder in `Sermon Series/`. Run `mg.py series "<name>"` right away.
+  If anything is missing (Background, Colors, fonts, Assets, Example), ask for it in this same
+  message ([series-folder.md](references/series-folder.md) §2).
 - **Sermon notes or outline** if there are any: they give the real scripture references and main
   points.
 - **Density**: light by default ([restraint.md](references/restraint.md)).
@@ -103,18 +107,22 @@ beat number and show it again if anything structural changed.
 
 ### 2. Style, then mood board (GATE 2)
 
-- **New series:** follow [style-intake.md](references/style-intake.md) to turn the art and the font
-  into `house/series/<slug>/kit.json` (palette roles with sources, type roles, motion personality,
-  subtitle style, signature moves, things to avoid). If the user gave a reference video or image,
+- **New series:** scan the folder and draft the kit (`mg.py series "<name>" --draft`). Read
+  Example.png before deciding anything, pick colours from the Colors photo (recording what was
+  picked and what wasn't), and finish the kit with [series-folder.md](references/series-folder.md)
+  and [style-intake.md](references/style-intake.md). That covers palette roles with sources, type
+  roles, a job for each background and asset, motion personality, subtitle style, signature moves
+  and the avoid list. If the user gave a reference video or image,
   decode it first ([reference-decode.md](references/reference-decode.md)). Offer **two directions**
   that differ in motion and type treatment, not in invented colour. Recommend one.
-- **Existing series:** load its kit. The mood board confirms it and shows this week's variation (the
+- **Existing series:** load `Sermon Series/<name>/kit.json`. Re-scan if the folder changed. The mood board confirms it and shows this week's variation (the
   new intro idea, any new treatment).
 - **"Make it relate to the sermon":** the sermon's central image becomes one signature move for this
   video (roots → rules that draw downward; light → a slow exposure lift on the title; a door →
   a mask that opens from the centre). One motif, used two or three times, never decoration.
 
-Build 2–4 key graphics from the storyboard as specs (step 3 format). Then:
+Build 2–4 key graphics from the storyboard as specs (step 3 format), including at least one
+full-frame card on a series background if the storyboard has one. Then:
 
 1. Render a motion sample over a real frame of the sermon: build with `--bg <thumb.jpg>` and render
    to `.mp4`.
@@ -194,6 +202,10 @@ link (the user often reviews on a phone). Otherwise give the absolute file path.
 line what you are asking them to approve.
 
 ## Gotchas
+
+- Series backgrounds are large square textures. Use them as `"fit": "cover"` image layers on
+  full-frame cards, never as boxes behind text over footage. Previews downscale them automatically;
+  Fusion loads the original.
 
 - Fonts must be installed on the editing PC for Fusion (Text+ uses installed fonts by family and
   style name). Ship the font files in the kit, and say so at hand-off.

@@ -1,14 +1,16 @@
-# Style intake: art + font → style kit
+# Style intake: series folder → style kit
 
-The user hands you sermon art and a font and says "make the graphics relate to the sermon". This is
-how you turn that into a kit (`house/series/<slug>/kit.json`) quickly, without inventing a look.
+The user drops a series folder into `Sermon Series/` (Background, Colors, fonts, Example.png,
+Assets/; see [series-folder.md](series-folder.md)) and says "make the graphics relate to the sermon".
+This is how you turn that into a kit (`Sermon Series/<name>/kit.json`) quickly, without inventing a
+look. Scan and draft first (`mg.py series "<name>" --draft`), then make the decisions below.
 
 The kit is the *only* thing that changes between series. Gates, restraint, treatment meanings and
 checks stay the same.
 
 ## 1. Look before you decide
 
-Open the art at full size and write one line each:
+Open **Example.png** at full size first, then the backgrounds and assets. Write one line each:
 
 - **What the art is made of**: photograph, flat illustration, paper and print, paint, type-only,
   texture. Material decides the motion more than colour does: paper suggests things being set or
@@ -22,15 +24,16 @@ Open the art at full size and write one line each:
 
 ## 2. Colour: find, then build a system
 
-```bash
-python3 $SKILL/engine/mg.py palette path/to/art.jpg --out motion/work/palette.json --swatch motion/work/swatch.png
-```
+The series scan has already analysed the **Colors photo** (`_stipech/palette.json`, and the swatch
+strip `_stipech/colors-swatch.png`). For any other image:
+`python3 $SKILL/engine/mg.py palette <image>`.
 
-The tool reports clusters (share, Lab lightness, chroma, hue), suggests roles and flags house looks.
-It is a starting point; you decide.
+The tool reports clusters (share, Lab lightness, chroma, hue), suggests roles leaning light, and
+flags house looks. It is a starting point; you decide, and you record every swatch's fate in
+`color_analysis.picked`.
 
 **Where colours come from, in order** (write the source on every role, `from:`):
-1. The art's own values (the tool's sampled hexes).
+1. The Colors photo (the tool's sampled hexes), cross-checked against the backgrounds.
 2. Brand values in `house/brand/` (logo files, brand guide).
 3. The footage itself (sample a still): when graphics sit over footage, the palette must sit
    inside it.
@@ -73,7 +76,8 @@ It is a starting point; you decide.
   0.5 for serifs, 0.56 for sans, 0.6+ for wide faces). `avg_char` sizes the reveal masks.
 - **Scale** (px at 1080p): title 72–96, phrase 56–72, label 26–32 (letter-spaced if caps), subtitle
   42–50. Scale contrast does the work, not weight.
-- **Fonts must be installable** (`.ttf`/`.otf`). Copy them into the kit folder. Note the licence.
+- **Fonts must be installable** (`.ttf`/`.otf`). They live in the series folder. The scan reads their
+  exact family and style names and measures `avg_char`, so use its values.
 
 ## 4. Motion personality
 
@@ -121,4 +125,4 @@ motion sample on the mood board, plus a one-line rationale. Recommend one.
 
 ## kit.json
 
-See [spec-format.md](spec-format.md) §kit and `examples/kit/kit.json`.
+See [spec-format.md](spec-format.md) §kit and `examples/Sermon Series/Rooted/kit.json`.

@@ -32,7 +32,10 @@ One graphic on the motion-graphics track. Both backends (Fusion and HTML) render
   (kit role, `#hex`, or `role@alpha%`), `tracking` (em), `leading`, `case: "upper"`, `small: true`
   for labels 22–27 px.
 - Rect: `w`, `h`, `radius`, `anchor` (`left` | `center` | `right`; draw grows from it).
-- Image: `src` (relative to the kit folder: brand assets are copied into the kit), `w` px.
+- Image: `src` relative to the series folder (`"Background.jpg"`, `"Assets/Icon - Tree.png"`).
+  Size: `"fit": "cover"` (fills the frame: backgrounds), `"fit": "contain"`, `"w"` or `"h"` px. Add
+  `"zoom"` with a fit for a tighter crop. `x,y` is the image centre (default: frame centre; move it to
+  pan a cover crop).
 - `in`/`out`: `{"treatment", "at", "dur"?, "ease"?, "distance"?, "from"?}`
   ([treatments.md](treatments.md)).
 - `anim` (optional, overrides a property's treatment keys): `{"dy": [[t, value, ease], ...]}`.
@@ -42,12 +45,12 @@ One graphic on the motion-graphics track. Both backends (Fusion and HTML) render
 - `allow_busy: true` on a layer silences the "too many moving properties" error. Say why in the
   storyboard.
 
-## Kit (`house/series/<slug>/kit.json`)
+## Kit (`Sermon Series/<Series Name>/kit.json`)
 
 ```json
 {
  "series": "Rooted", "personality": "one sentence",
- "palette": {"ground": {"hex": "#ECE9E2", "share": 70, "from": "art.jpg paper"}, "ink": {...},
+ "palette": {"ground": {"hex": "#ECE9E2", "share": 70, "from": "Colors.jpg #ECE9E2 (28%)"}, "ink": {...},
              "light": {...}, "accent": {...}},
  "type": {"display": {"family": "Caladea", "style": "Regular", "weight": 400,
                       "file": "fonts/Caladea-Regular.ttf", "avg_char": 0.5, "use": "titles"},
@@ -58,9 +61,18 @@ One graphic on the motion-graphics track. Both backends (Fusion and HTML) render
  "subtitles": {"font": "subtitle", "size": 46, "color": "#FAF9F6", "y": 940, "shadow": true,
                "shadow_color": "#000000@35", "shadow_blur": 6, "max_words": 3, "max_chars": 24,
                "punctuation": "drop-trailing", "case": "as-spoken"},
+ "textures": [{"id": "background", "file": "Background.jpg", "w": 2400, "h": 2400, "use": "full-frame cards"}],
+ "assets": [{"id": "title-card", "file": "Assets/Title Card.png", "kind": "title", "brand": true, "use": "..."}],
+ "color_analysis": {"image": "Colors.jpg", "swatches": [...], "picked": {"#ECE9E2": "ground", "#DEDBD2": "not used: too close to ground"}},
+ "sources": {"backgrounds": [...], "colors": "Colors.jpg", "example": "Example.png", "fonts": [...], "assets": [...]},
+ "available_fonts": [{"file": "...", "family": "...", "style": "...", "avg_char": 0.41}],
+ "draft": true,
  "signature_moves": ["..."], "avoid": ["..."]
 }
 ```
+
+File paths in the kit are relative to the series folder. `"draft": true` until the mood board is
+approved; the mood board shows a draft banner while it is set.
 
 ## Storyboard (`motion/storyboard.json`)
 
@@ -77,7 +89,8 @@ One graphic on the motion-graphics track. Both backends (Fusion and HTML) render
   {"id": "03", "in": 74.2, "out": 80.2, "kind": "title", "line": "spoken line",
    "shows": "exact text on screen", "purpose": "why it earns a graphic",
    "treatment_in": "rise-mask", "treatment_out": "sink", "zone": "lower-left",
-   "notes": "optional", "thumb": "review/thumbs/0074.20.jpg", "brand": false},
+   "notes": "optional", "thumb": "review/thumbs/0074.20.jpg", "brand": false,
+   "background": "background (full-frame beats: which series background)"},
   {"id": "01", "in": 41.0, "out": 46.0, "kind": "nothing", "line": "...", "purpose": "why it stays on the speaker"}
  ]
 }
@@ -89,7 +102,7 @@ One graphic on the motion-graphics track. Both backends (Fusion and HTML) render
 {
  "project": "...", "series": "...", "direction": "the personality sentence",
  "specimen_text": "a phrase from this sermon",
- "sources": [{"image": "inputs/art.jpg", "caption": "Series art"}],
+ "sources": [{"image": "inputs/extra-reference.jpg", "caption": "optional: anything beyond the series folder"}],
  "motion": [{"video": "review/motion/03.mp4", "caption": "what to look at"}],
  "stills": [{"image": "review/stills/07_1.80.png", "caption": "..."}],
  "treatments": [{"name": "rise-mask", "use": "titles and verses"}],
@@ -104,7 +117,7 @@ directions' media captioned "A · …" / "B · …".
 
 ```json
 {
- "project": "...", "fps": 24, "width": 1920, "height": 1080, "kit": "../house/series/rooted/kit.json",
+ "project": "...", "fps": 24, "width": 1920, "height": 1080, "kit": "/path/to/Sermon Series/Rooted/kit.json",
  "tracks": {"graphics": 3, "subtitles": 4}, "timeline_offset": 0,
  "graphics": [{"id": "03-rooted-title", "spec": "specs/03-rooted-title.json", "in": 74.2,
                "render": "out/03-rooted-title_1m14s20.mov"}],
