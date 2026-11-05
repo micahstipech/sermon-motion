@@ -173,10 +173,11 @@ def analyse_colors(inv, k=10):
     return out
 
 
-DEFAULT_MOTION = {"tempo": 1.1, "distance": 18, "ease_in": "settle", "ease_out": "exit", "notes": "draft: set from the art"}
-DEFAULT_SUBS = {"font": "subtitle", "size": 46, "color": "#FAF9F6", "y": 940, "shadow": True,
-                "shadow_color": "#000000@35", "shadow_blur": 6, "max_words": 3, "max_chars": 24,
-                "punctuation": "drop-trailing", "case": "as-spoken"}
+DEFAULT_MOTION = {"tempo": 1.1, "distance": 18, "ease_in": "settle", "ease_out": "exit", "notes": "draft: only a collage, a paper effect, a light move with opacity, or none"}
+DEFAULT_SUBS = {"font": "subtitle", "size": 46, "color": "#FAF9F6", "y": 940, "shadow": False, "tilt": 1.4,
+                "chip": {"color": "ink", "extend_h": .16, "extend_v": .05},
+                "vertical": {"size": 52, "x": 540, "y": 1268},
+                "max_words": 3, "max_chars": 24, "punctuation": "drop-trailing", "case": "as-spoken"}
 
 
 def draft_kit(inv, analysis, fallback_fonts=None):

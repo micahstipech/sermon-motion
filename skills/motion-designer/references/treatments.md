@@ -5,33 +5,28 @@ habit. Vocabulary adapted from huashu-motion's techniques library (MIT), narrowe
 
 ## Entrances (`in.treatment`)
 
+The standing rule: a collage, a paper effect, a light movement with an opacity shift, or no animation.
+`mg.py lint` rejects anything else, including pop, bounce, confetti, slams, shakes and per-letter effects.
+
 | Treatment | Says | Default (× tempo) | Good for |
 |---|---|---|---|
-| `cut` | plain, confident; trusts the words | 1 frame | small labels, numbers, references, list items after the first |
-| `fade` | quiet arrival; nothing to notice but the content | 0.5 s | supporting lines, second layers |
-| `rise` | gentle emphasis; a small lift into place | 0.7 s, `distance` px | phrases, quotes |
-| `rise-mask` | precise, editorial; rises out of an invisible line | 0.75 s | titles, verses, the sermon's question |
-| `wipe` | read left to right, like a line being written | 0.9 s | chapter turns, outlines, lists |
-| `track-in` | a word settling into meaning; letters gather | 1.1 s, from +0.18–0.25 em | single words, series names |
+| `cut` | plain, confident; trusts the words | 1 frame | panels that cut with the picture, labels, references, list items |
+| `fade` | quiet arrival; nothing to notice but the content | 0.5 s | supporting lines, second layers, strike-through lines |
+| `rise` | a light lift into place with an opacity shift | 0.7 s, `distance` px | phrases, titles, quotes |
 | `settle` | presence without movement; a 3–4 % scale settle | 0.8 s | full-frame cards, logos, images |
-| `focus` | reflective, coming into focus | 0.8 s | **max one per video**, with a reason (generated-motion cliché as a default) |
-| `draw` | structure, underlining; a rule or shape draws on | 0.7 s | rules, underlines, dividers |
+| `collage` | a piece laid down: slightly large and turned, settling flat | 0.6 s | collage tiles, stickers, assembling the art piece by piece |
+| `paper` | a sheet slides in from its edge | 0.6 s | `box` panels and `split` sheets (edge wipe in Fusion) |
 
 ## Exits (`out.treatment`)
 
-Exits are faster than entrances (0.25–0.45 s). The thought is finished; do not perform it again.
+Exits are faster than entrances (0.2–0.45 s). The thought is finished; do not perform it again.
 
 | Treatment | Says |
 |---|---|
-| `cut` | leaves with the edit (default when the graphic ends on a picture cut) |
-| `fade` | quiet exit (the default) |
+| `cut` | leaves with the edit (the default when a graphic ends on a picture cut) |
+| `fade` | quiet exit |
 | `sink` | drops slightly while fading: the thought is complete |
-| `wipe` | wipes away in reading direction: on to the next point |
-| `focus` | softens out: pairs only with a `focus` entrance |
-| `undraw` | a rule retracts to its anchor |
-
-Custom motion: put explicit `anim` keyframes on a layer (`{"dy": [[t, v, ease], ...]}`). Keep to
-the same restraint budget (lint enforces it).
+| `paper` | a sheet slides back to its edge |
 
 ## Choreography inside one graphic
 
@@ -43,16 +38,17 @@ the same restraint budget (lint enforces it).
 
 | Kind | When | Typical build |
 |---|---|---|
-| `title` | the sermon's question or big idea, said once | display phrase + rule + small reference |
+| `title` | the sermon's question or big idea, said once | display phrase + small reference |
 | `scripture` | the main text read aloud | verse in display (≤ 18 words per card; split longer verses across cards on the reading's phrasing) + reference in text caps |
 | `reference` | a passage named but not read | reference alone, small, in a corner zone |
-| `keyword` | the word the sermon keeps returning to | one word or 2–4 word phrase, `track-in` or `rise` |
+| `keyword` | the word the sermon keeps returning to | one word or 2–4 word phrase, `rise` |
 | `quote` | a line people will repeat (preacher or cited author) | display italic/roman, attribution small |
-| `chapter` | the turn into a new main point | number (cut) + heading (wipe or rise-mask) |
+| `chapter` | the turn into a new main point | number (cut) + heading (rise) |
 | `list` / `outline` | main points recapped | items arrive on their spoken words, `cut` after the first |
 | `name` (lower third) | a guest, a testimony, a location | name in text, role small; no bar, no box unless the kit has one |
 | `number` | a count or date that matters | number in display, label small; only real numbers |
 | `full-frame` | a breath between sections, a verse card | kit ground + type; use 0–2 per video |
+| `split` | the words need room but the face should stay: a verse read aloud, a list, a quote | series background panel on one side (`split`, [spec-format.md](spec-format.md)), type on it, footage on the other side; the speaker must already sit in that half |
 | `intro` / `outro` | the opening and closing seconds | designed per sermon ([variation.md](variation.md)) |
 | `nothing` | personal story, emotion, humour, prayer, the altar call | the speaker's face carries it |
 
@@ -61,7 +57,9 @@ user asks.
 
 ## Zones (1920 × 1080; keep within the kit's safe area)
 
-`lower-left`, `upper-left`, `center`, `right-third`, `left-third`, `upper-right`, `full-frame`.
+`lower-left`, `upper-left`, `center`, `right-third`, `left-third`, `upper-right`, `full-frame`,
+and for split screens `split-top`, `split-bottom`, `split-left`, `split-right`. Text in any zone stays inside the
+safe area ([restraint.md](restraint.md)).
 Choose the zone from the footage: the empty side of the frame, away from the face, out of the
 subtitle band. Vary zones across the video where the footage allows.
 

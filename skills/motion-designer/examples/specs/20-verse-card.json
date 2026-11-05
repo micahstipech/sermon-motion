@@ -7,9 +7,9 @@
   {"id": "icon", "type": "image", "src": "Assets/Icon - Tree.png", "w": 120, "x": 1640, "y": 300,
    "in": {"treatment": "fade", "at": 1.6}, "out": {"treatment": "fade", "at": 6.8}},
   {"id": "verse", "type": "text", "text": "Blessed is the one who trusts\nin the Lord, whose confidence\nis in him.", "font": "display", "size": 72,
-   "color": "ink", "x": 180, "y": 470, "align": "left", "leading": 1.05,
-   "in": {"treatment": "rise-mask", "at": 0.45}, "out": {"treatment": "fade", "at": 6.8}},
+   "color": "ink", "x": 196, "y": 470, "align": "left", "leading": 1.05,
+   "in": {"treatment": "rise", "at": 0.45}, "out": {"treatment": "fade", "at": 6.8}},
   {"id": "ref", "type": "text", "text": "JEREMIAH 17:7", "font": "text", "size": 26, "small": true, "color": "ink@75",
-   "tracking": 0.14, "x": 182, "y": 640, "align": "left", "in": {"treatment": "cut", "at": 1.3}, "out": {"treatment": "fade", "at": 6.8}}
+   "tracking": 0.14, "x": 198, "y": 640, "align": "left", "in": {"treatment": "cut", "at": 1.3}, "out": {"treatment": "fade", "at": 6.8}}
  ]
 }

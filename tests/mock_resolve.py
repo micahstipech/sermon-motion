@@ -14,6 +14,7 @@ class Clip:
     def GetClipProperty(s, k): return s.n
 class Folder:
     def __init__(s, clips, subs=()): s.c, s.s = clips, list(subs)
+    def GetName(s): return "bin"
     def GetClipList(s): return s.c
     def GetSubFolderList(s): return s.s
 class TL:
@@ -31,6 +32,10 @@ class TL:
 class Pool:
     def __init__(s, tl): s.tl = tl; s.root = Folder([], [Folder([Clip("SM Carrier")])])
     def GetRootFolder(s): return s.root
+    def AddSubFolder(s, parent, name):
+        f = Folder([], []); f.GetName = lambda: name; parent.s.append(f); return f
+    def SetCurrentFolder(s, f): return True
+    def MoveClips(s, clips, f): return True
     def AppendToTimeline(s, infos):
         out = []
         for i in infos:
@@ -41,6 +46,8 @@ class Pool:
 class Proj:
     def __init__(s): s.tl = TL(); s.pool = Pool(s.tl)
     def GetCurrentTimeline(s): return s.tl
+    def GetTimelineCount(s): return 1
+    def GetTimelineByIndex(s, i): return s.tl
     def GetMediaPool(s): return s.pool
     def GetSetting(s, k): return "24"
 class PM:

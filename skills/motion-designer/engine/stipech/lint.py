@@ -4,7 +4,8 @@ Errors are rule breaks (fix before showing). Warnings are judgement calls (look,
 """
 import re
 
-from .spec import sample, TREATMENTS_IN
+from .spec import (sample, TREATMENTS_IN, ALLOWED_IN, ALLOWED_OUT, subtitle_style, text_safe_box,
+                   estimate_text_width, text_block_height)
 
 MOVING = ("dx", "dy", "scale", "blur", "tracking", "reveal", "draw")
 
@@ -31,6 +32,22 @@ def lint_spec(spec, kit):
     for L in spec["layers"]:
         tr = L["tracks"]
         lid = f"{sid}/{L['id']}"
+        if L.get("box") and len(L["box"]) == 4:
+            bx, by, bw, bh = (float(v) for v in L["box"])
+            if bx < -1 or by < -1 or bx + bw > W + 1 or by + bh > H + 1:
+                warns.append(f"{lid}: box [{bx:.0f},{by:.0f},{bw:.0f},{bh:.0f}] runs off the {W}x{H} frame.")
+        tin_ = (L.get("in") or {}).get("treatment", "cut")
+        tout_ = (L.get("out") or {}).get("treatment", "cut")
+        if tin_ not in ALLOWED_IN:
+            errs.append(f"{lid}: entrance '{tin_}' breaks the animation rule. Use {sorted(ALLOWED_IN)}.")
+        if tout_ not in ALLOWED_OUT:
+            errs.append(f"{lid}: exit '{tout_}' breaks the animation rule. Use {sorted(ALLOWED_OUT)}.")
+        for p in ("tracking", "blur", "reveal", "draw"):
+            if p in (L.get("anim") or {}):
+                errs.append(f"{lid}: custom '{p}' animation breaks the animation rule (collage, paper, a light move with opacity, or none).")
+        for p, keys in (L.get("anim") or {}).items():
+            if p in ("dx", "dy") and any(abs(k[1]) > 60 for k in keys):
+                warns.append(f"{lid}: {p} travels more than 60 px; movement onto the screen should stay light.")
         moving_in = [p for p in MOVING if p in tr and len(tr[p]) > 1 and tr[p][0][0] < dur * 0.5]
         if len(moving_in) > 2 and not L.get("allow_busy"):
             errs.append(f"{lid}: {len(moving_in)} properties move on entrance ({', '.join(moving_in)}). Max 2 incl. one move: over-animation.")
@@ -44,7 +61,7 @@ def lint_spec(spec, kit):
         if L.get("type", "text") == "text":
             text = str(L.get("text", ""))
             size = float(L.get("size", 60))
-            if size < 28 * H / 1080 and not L.get("small"):
+            if size < 28 * min(W, H) / 1080 and not L.get("small"):
                 errs.append(f"{lid}: text size {size}px is below 28px at 1080p (mark small:true for labels >= 22px).")
             win = _visible_window(tr, dur)
             words = len(re.findall(r"\w+", text))
@@ -54,9 +71,19 @@ def lint_spec(spec, kit):
             if not is_sub and words > 14:
                 warns.append(f"{lid}: {words} words on one layer. B-roll text should be a phrase, not a paragraph.")
         x, y = float(L.get("x", W / 2)), float(L.get("y", H / 2))
-        if not is_sub and (x < W * safe - 1 or x > W * (1 - safe) + 1 or y < H * safe - 1 or y > H * (1 - safe) + 1):
+        if not is_sub and not L.get("box") and L.get("type", "text") != "text" and (x < W * safe - 1 or x > W * (1 - safe) + 1 or y < H * safe - 1 or y > H * (1 - safe) + 1):
             warns.append(f"{lid}: anchor ({x:.0f},{y:.0f}) is outside the {int(safe * 100)}% safe area.")
-        st = (kit or {}).get("subtitles")
+        if not is_sub and L.get("type", "text") == "text" and not L.get("allow_unsafe"):
+            sl, st_, sr, sb = text_safe_box(W, H, kit)
+            tw = estimate_text_width(L, kit) / 1.08
+            th = text_block_height(L) * float(L.get("leading", 1.0)) / 1.25 * 1.1
+            align = L.get("align", "left")
+            x0 = x if align == "left" else x - tw / 2 if align == "center" else x - tw
+            x1, y0, y1 = x0 + tw, y - th / 2, y + th / 2
+            if x0 < sl - 1 or x1 > sr + 1 or y0 < st_ - 1 or y1 > sb + 1:
+                errs.append(f"{lid}: text at x {x0:.0f}-{x1:.0f}, y {y0:.0f}-{y1:.0f} leaves the safe area "
+                            f"(x {sl:.0f}-{sr:.0f}, y {st_:.0f}-{sb:.0f}). Move it, break the line or shrink it.")
+        st = subtitle_style(kit, W, H) if (kit or {}).get("subtitles") else None
         if st and not is_sub and L.get("type", "text") == "text":
             band_top = float(st.get("y", H * 0.86)) - float(st.get("size", 46)) * 0.9
             bottom = y + float(L.get("size", 60)) * 0.6 * (str(L.get("text", "")).count("\n") + 1)
@@ -72,7 +99,9 @@ def lint_spec(spec, kit):
     peak = 0
     for i in range(101):
         t = i / 100 * dur
-        n = sum(1 for L in spec["layers"] if sample(L["tracks"].get("opacity") or [[0, 1]], t) > 0.05)
+        # a split-screen panel is the ground the idea sits on, not one of its layers
+        n = sum(1 for L in spec["layers"] if not L.get("panel")
+                and sample(L["tracks"].get("opacity") or [[0, 1]], t) > 0.05)
         peak = max(peak, n)
     if peak > 4 and not is_sub:
         errs.append(f"{sid}: {peak} layers visible at once. One idea per graphic: max 4 (text + rule + label + brand).")
@@ -80,8 +109,12 @@ def lint_spec(spec, kit):
 
 
 def lint_project(specs):
-    """Across all graphics in one video: treatment variety and cliche budget."""
+    """Across all graphics in one video: treatment variety, cliche budget, one clip at a time on the track."""
     errs, warns = [], []
+    placed = sorted((float(s["in"]), float(s["in"]) + float(s["duration"]), s.get("id")) for s in specs if s.get("kind") != "subtitle" and "in" in s)
+    for (a0, a1, an), (b0, b1, bn) in zip(placed, placed[1:]):
+        if b0 < a1 - 1e-3:
+            errs.append(f"{an} and {bn} overlap by {a1 - b0:.2f}s. Each graphic is its own clip on the graphics track.")
     tin = [L.get("in", {}).get("treatment", "cut") for s in specs if s.get("kind") != "subtitle" for L in s["layers"]
            if L.get("type", "text") == "text"]
     if tin:

@@ -27,15 +27,23 @@ Text+ clips, so the editor can trim timing and fix words in Resolve.
 ## Style (kit `subtitles`)
 
 - Font: the kit's `subtitle` role, a legible sans at medium weight. Size 42–50 px at 1080p.
-- Colour: near-white (`#FAF9F6`-ish), neutral. A soft shadow (black at 30–40 %, blur 5–8 px), no
-  outline, no box, no word highlight, no pop.
-- Position: centred, baseline about 86–88 % down the frame (`y` ≈ 930–950 at 1080p). Graphics stay
-  out of this band (lint).
+- Colour: near-white (`#FAF9F6`-ish), neutral, on the kit's paper chip. No outline, no word highlight,
+  no pop.
+- Position: centred, baseline about 86–88 % down the frame (`y` ≈ 930–950 at 1080p); on vertical
+  video above the phone app's caption area, centred, and inside the 17.5 % side margins. Graphics stay out of this band (lint).
 - Same style all video. Subtitles are not where the style shows off.
 
 ## In Resolve
 
-Each subtitle is an "SM Carrier" title with a generated Fusion comp (Text+ with the chunk's text,
-plus a shadow Text+). To fix timing, trim the clip on V4. To fix a word, open the clip in Fusion
-(or the Inspector) and edit the Text+ text. An `.srt` is also exported next to `subtitles.json` as a
-backup (Resolve can import it to a subtitle track).
+Each subtitle is its own "SM Carrier" title on the subtitle track, in both generated and Fusion mode,
+so timing is edited by trimming the clip. To fix a word, edit the Text+ text in the Inspector or the
+Fusion page. An `.srt` is also exported next to `subtitles.json` as a backup.
+
+The default design is a paper chip: Text+ shading element 4 set as a border fill, which resizes itself
+when the words change, plus a small fixed tilt that varies from clip to clip. Set it in the kit:
+`"chip": {"color": "<role or #hex>", "extend_h": 0.16, "extend_v": 0.05}, "tilt": 1.4`. Choose a
+mid-dark colour from the art, so white shirts and bright walls behind the words don't matter.
+`"vertical": {"size": 52, "x": 540, "y": 1268}` overrides size and position on vertical timelines.
+Leave `chip` out for plain type with `"shadow": true`.
+
+Don't keyframe a word highlight inside a subtitle: it drifts as soon as the clip is retimed.

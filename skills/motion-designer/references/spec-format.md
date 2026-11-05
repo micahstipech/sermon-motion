@@ -13,17 +13,19 @@ One graphic on the motion-graphics track. Both backends (Fusion and HTML) render
  "width": 1920, "height": 1080,
  "line": "the spoken line it covers",
  "layers": [
-  {"id": "rule", "type": "rect", "x": 160, "y": 648, "w": 360, "h": 2, "color": "light@70", "anchor": "left",
-   "in": {"treatment": "draw", "at": 0.2}, "out": {"treatment": "fade", "at": 5.9}},
+  {"id": "rule", "type": "rect", "x": 196, "y": 648, "w": 360, "h": 2, "color": "light@70", "anchor": "left",
+   "in": {"treatment": "fade", "at": 0.2}, "out": {"treatment": "fade", "at": 5.9}},
   {"id": "title", "type": "text", "text": "Nothing has roots", "font": "display", "size": 84,
-   "color": "light", "x": 160, "y": 580, "align": "left",
-   "in": {"treatment": "rise-mask", "at": 0.55}, "out": {"treatment": "sink", "at": 5.9}}
+   "color": "light", "x": 196, "y": 580, "align": "left",
+   "in": {"treatment": "rise", "at": 0.55}, "out": {"treatment": "sink", "at": 5.9}}
  ]
 }
 ```
 
 - `in` (spec level): timeline seconds where the graphic starts. `duration`: seconds. Layer times
   are clip-local.
+- `width`/`height` set the format: horizontal (default) or vertical. Vertical is treated as social video by default.
+  Text must stay inside the safe area for its format ([restraint.md](restraint.md)).
 - Coordinates: px in the spec frame, y down. Text `x,y` is the anchor: left edge (`align: left`),
   centre, or right edge, at the text's vertical middle. Rect `x,y` is the anchor end (`anchor`) at
   its vertical middle. Image `x,y` is its centre.
@@ -40,10 +42,41 @@ One graphic on the motion-graphics track. Both backends (Fusion and HTML) render
   ([treatments.md](treatments.md)).
 - `anim` (optional, overrides a property's treatment keys): `{"dy": [[t, value, ease], ...]}`.
   Properties: `opacity`, `dx`, `dy` (px), `scale`, `blur` (px), `tracking` (em), `reveal` /
-  `reveal_out` (0–1 wipe), `draw` (0–1, rects). The ease is the one used to arrive at that key:
+  `reveal_out` (0–1 wipe), `draw` (0–1, rects), `rotation` (degrees). Lint rejects custom `tracking`,
+  `blur`, `reveal` and `draw` keys under the animation rule. The ease is the one used to arrive at that key:
   `settle`, `glide`, `breathe`, `snap`, `exit`, `linear`.
 - `allow_busy: true` on a layer silences the "too many moving properties" error. Say why in the
   storyboard.
+- `rotation` (degrees) on any layer: a fixed tilt, for collage pieces and stickers.
+- `torn: true` on a box layer gives it a torn paper edge, on the side away from `dir`, with a soft shadow
+  (generated mode; a straight edge in Fusion). Keep a torn panel at least 18 px past any black it covers.
+- `box: [x, y, w, h]` (px, top-left origin) on an `image` or `rect` layer keeps it inside that
+  rectangle. An image is cover-fitted to the box, not the frame, and clipped to it (default centre:
+  the box centre). A rect fills the box. A `paper` entrance slides the sheet in from the edge named by
+  `dir` (`left` | `right` | `top` | `bottom`), and a `paper` exit slides it back.
+
+### Split screen (`split`)
+
+Half graphic, half footage. One spec-level line adds a panel under every other layer:
+
+```json
+"split": {"side": "top", "size": 0.5, "src": "Background.png",
+          "in": {"treatment": "paper", "at": 0.0, "dur": 0.8}, "out": {"treatment": "paper", "at": 6.0}}
+```
+
+- `side`: `top` | `bottom` | `left` | `right`, the half the graphic takes. `size`: a fraction of
+  the frame (≤ 1) or px (`720` matches a 720 px black band left by the edit).
+- `src`: a series background (cover-fitted to the panel; `zoom`, `x`, `y` to adjust the crop), or
+  `color`: a kit role for a flat panel (`ground`, `surface`).
+- `in`/`out`: usually `paper` from the frame edge or `cut` with the edit. Panels may also `fade` or
+  `settle`. `"torn": false` gives a straight edge.
+- Set the type on the panel with ordinary layers (ink/accent on paper; lint treats the panel as the
+  ground and does not count it as one of the four layers).
+- **The footage half must be framed for it.** The graphic track cannot move the sermon clip. Use a
+  split where the speaker already sits in the other half (a wide shot, or a shot the editor framed
+  low, which leaves a black band), or ask the editor to reposition V1 for that stretch. Note which in
+  the storyboard (`"split": "top 50%: needs V1 tilted down 760 px"`). In Resolve, Claude may set the
+  V1 clip's Tilt on a duplicated timeline only when the user asks.
 
 ## Kit (`Sermon Series/<Series Name>/kit.json`)
 
@@ -118,11 +151,12 @@ directions' media captioned "A · …" / "B · …".
 ```json
 {
  "project": "...", "fps": 24, "width": 1920, "height": 1080, "kit": "/path/to/Sermon Series/Rooted/kit.json",
- "tracks": {"graphics": 3, "subtitles": 4}, "timeline_offset": 0,
+ "mode": "generated", "bin": "2026-11-08 Week 1", "tracks": {"graphics": 3, "subtitles": 4}, "timeline_offset": 0,
  "graphics": [{"id": "03-rooted-title", "spec": "specs/03-rooted-title.json", "in": 74.2,
                "render": "out/03-rooted-title_1m14s20.mov"}],
  "subtitles": "work/subtitles.json"
 }
 ```
 
-`fps` may be a fraction string (`"24000/1001"`). Use the timeline's frame rate.
+`mode`: `generated` (default; every graphic needs its `render`) or `fusion`. `bin`: the name of this package's bin
+under Motion Graphics (defaults to the project). `fps` may be a fraction string (`"24000/1001"`). Use the timeline's frame rate.

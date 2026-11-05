@@ -9,7 +9,8 @@ import json
 import mimetypes
 import os
 
-from .spec import EASES, font_for, resolve_color, estimate_text_width, text_block_height, image_size, image_fit
+from .spec import (EASES, font_for, resolve_color, estimate_text_width, text_block_height, image_size, image_fit,
+                   box_of, box_extent_keys, torn_polygon)
 
 FONT_MIME = {".otf": "font/otf", ".ttf": "font/ttf", ".woff": "font/woff", ".woff2": "font/woff2"}
 
@@ -73,7 +74,7 @@ def build(spec, kit, kit_root=None, asset_root=None, background=None):
         lx, ly = float(layer.get("x", W / 2)), float(layer.get("y", H / 2))
         item = {"id": layer["id"], "type": kind, "x": lx, "y": ly, "tracks": layer["tracks"],
                 "align": layer.get("align", "left"), "anchor": layer.get("anchor", "left"),
-                "tracking": float(layer.get("tracking", 0.0))}
+                "tracking": float(layer.get("tracking", 0.0)), "rotation": float(layer.get("rotation", 0.0))}
         if kind == "text":
             f = font_for(layer, kit)
             fam = f"'kit-{layer.get('font', 'display')}'" if f.get("file") else f"'{f['family']}'"
@@ -90,6 +91,13 @@ def build(spec, kit, kit_root=None, asset_root=None, background=None):
             if layer.get("clip"):
                 item["band"] = {"w": estimate_text_width(layer, kit) + 40, "h": text_block_height(layer) * 1.1}
             html_layers.append(f'<div class="L" id="{layer["id"]}"><div class="T" style="{style}">{esc}</div></div>')
+        elif kind == "rect" and box_of(layer):
+            # a panel: fills its box; position, reveal and clipping come from the box container
+            bx, by, bw, bh = box_of(layer)
+            item["type"] = "panel"
+            item["x"], item["y"], item["w"], item["h"] = bx + bw / 2, by + bh / 2, bw, bh
+            col = _rgba(resolve_color(layer.get("color", "ground"), kit))
+            html_layers.append(f'<div class="L R" id="{layer["id"]}" style="background:{col};width:{bw:.1f}px;height:{bh:.1f}px"></div>')
         elif kind == "rect":
             item["w"], item["h"] = float(layer.get("w", 200)), float(layer.get("h", 2))
             col = _rgba(resolve_color(layer.get("color", "ink"), kit))
@@ -105,6 +113,22 @@ def build(spec, kit, kit_root=None, asset_root=None, background=None):
             item["w"], item["h"] = dw, dh
             html_layers.append(f'<div class="L" id="{layer["id"]}"><img src="data:{mime};base64,{data}" '
                                f'style="width:{dw:.1f}px;height:{dh:.1f}px;display:block"></div>')
+        b = box_of(layer)
+        if b:
+            item["box"] = b
+            item["dir"] = layer.get("dir", "left")
+            if layer["tracks"].get("paper") or layer["tracks"].get("paper_out"):
+                item["slide"] = True  # the sheet itself moves; the box does not wipe
+            else:
+                item["ext"] = box_extent_keys(layer)
+            clip = ""
+            if layer.get("torn"):
+                poly = torn_polygon(sum(map(ord, layer["id"])) + int(b[3]), b[2], b[3], item["dir"])
+                clip = f"clip-path:{poly};overflow:visible;"
+                item["torn"] = True
+            html_layers[-1] = (f'<div class="PW{" TS" if layer.get("torn") else ""}" id="{layer["id"]}__wrap" style="z-index:auto">'
+                               f'<div class="BX" id="{layer["id"]}__box" style="left:{b[0]:.1f}px;top:{b[1]:.1f}px;'
+                               f'width:{b[2]:.1f}px;height:{b[3]:.1f}px;{clip}">{html_layers[-1]}</div></div>')
         layers.append(item)
 
     bg_css = "transparent"
@@ -124,6 +148,9 @@ html,body{{margin:0;padding:0;background:transparent;}}
 #stage{{position:relative;width:{W}px;height:{H}px;overflow:hidden;background:{bg_css};}}
 .L{{position:absolute;left:0;top:0;transform-origin:0 0;will-change:auto;}}
 .T{{white-space:pre;font-kerning:normal;text-rendering:geometricPrecision;}}
+.BX{{position:absolute;overflow:hidden;}}
+.PW{{position:absolute;left:0;top:0;width:100%;height:100%;}}
+.TS{{filter:drop-shadow(0 10px 14px rgba(50,28,12,.34));}}
 </style></head><body>
 <div id="stage">
 {chr(10).join(html_layers)}
@@ -148,9 +175,18 @@ window.seek=function(t){{
   else if(l.type==='rect'){{const dv=smp(T.draw,t,1);w=l.w*dv;h=l.h;e.style.width=w+'px';e.style.height=h+'px';
     ox=l.anchor==='left'?0:l.anchor==='right'?w:w/2;oy=h/2;}}
   else{{ox=w/2;oy=h/2;}}
+  if(l.box){{x-=l.box[0];y-=l.box[1];
+    const bx=e.parentNode;
+    if(l.slide){{const p=smp(T.paper,t,1)*(1-smp(T.paper_out,t,0)),sx=(1-p)*(l.box[0]+l.box[2]+40),sy=(1-p)*(l.box[1]+l.box[3]+40),
+      hx=(1-p)*(D.W-l.box[0]+40),hy=(1-p)*(D.H-l.box[1]+40);
+      bx.parentNode.style.transform=l.dir==='top'?`translateY(${{-sy}}px)`:l.dir==='bottom'?`translateY(${{hy}}px)`:
+        l.dir==='right'?`translateX(${{hx}}px)`:`translateX(${{-sx}}px)`;}}
+    else if(l.ext&&!l.torn){{const ex=Math.max(0,Math.min(1,smp(l.ext,t,1))),g=((1-ex)*100).toFixed(3)+'%';
+      bx.style.clipPath=l.dir==='right'?`inset(0 0 0 ${{g}})`:l.dir==='top'?`inset(0 0 ${{g}} 0)`:
+      l.dir==='bottom'?`inset(${{g}} 0 0 0)`:`inset(0 ${{g}} 0 0)`;}}}}
   e.style.opacity=op;e.style.filter=bl>0.05?`blur(${{bl}}px)`:'none';
   e.style.transformOrigin=`${{ox}}px ${{oy}}px`;
-  e.style.transform=`translate(${{x-ox+dx}}px,${{y-oy+dy}}px) scale(${{sc}})`;
+  e.style.transform=`translate(${{x-ox+dx}}px,${{y-oy+dy}}px) rotate(${{smp(T.rotation,t,l.rotation)}}deg) scale(${{sc}})`;
   if(l.band){{const r=smp(T.reveal,t,1),o=smp(T.reveal_out,t,0);
     const bw=l.band.w,bh=l.band.h,left=(l.align==='left'?-20:l.align==='center'?w/2-bw/2:w-bw+20);
     const top=oy-bh/2-dy, L=left+bw*o, R=left+bw*r;

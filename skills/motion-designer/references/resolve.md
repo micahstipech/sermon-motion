@@ -18,7 +18,17 @@ Timing: seconds in the package are measured from the timeline start (the storybo
 timeline export). `place.py` maps them as `timeline start frame + round(seconds × timeline fps)`.
 Pass `--offset S` if the video you analysed starts S seconds into the timeline.
 
-## How a graphic gets onto the timeline
+## Two modes
+
+- **Generated (default, `/mg-build`).** Each graphic is a transparent ProRes 4444 clip. `place.py` imports it into
+  its own bin (Motion Graphics/<project>) and puts it on V3 as a video-only clip. Nothing is burned into the footage.
+- **Fusion (`/mg-fusion`, `"mode": "fusion"` in the plan).** Each graphic is an SM Carrier title holding a Fusion
+  comp, described below, with the ProRes clip as a fallback.
+
+Subtitles are Text+ clips on V4 in both modes. Keep the Media Pool organized: everything a package brings in stays
+in its bin, and `--archive-older "Text"` moves superseded timelines to Older Versions/Timelines (nothing is deleted).
+
+## How a Fusion graphic gets onto the timeline
 
 1. `SM Carrier` is a transparent title template (`engine/resolve/carrier.setting`). `install.py`
    copies it to `…/Fusion/Templates/Edit/Titles/Stipech Motion/`. **Once**, the editor drags
@@ -44,7 +54,9 @@ as a title template for manual reuse.
 python place.py PACKAGE_DIR --dry-run          # what would go where, nothing touched
 python place.py PACKAGE_DIR                    # place
 python place.py PACKAGE_DIR --replace          # remove earlier SM clips on SM tracks first
-python place.py PACKAGE_DIR --prefer-renders   # ProRes renders instead of comps
+python place.py PACKAGE_DIR --new-timeline "Name"     # duplicate the open timeline, place on the copy
+python place.py PACKAGE_DIR --archive-older "Reel 1"  # then move older timelines with that text to Older Versions
+python place.py PACKAGE_DIR --prefer-renders   # Fusion mode: ProRes renders instead of comps
 python place.py PACKAGE_DIR --no-subtitles     # graphics only
 ```
 
@@ -88,4 +100,14 @@ package (`examples/plan.json` → `mg.py package`) and compare each graphic with
 Record each confirmed value in a line here with the date and Resolve version, so later machines and
 sessions inherit it.
 
-Confirmed: (none yet)
+Confirmed (2026-11-04, DaVinci Resolve Studio 21.1.2, Windows, 1080x1920 @ 24, checked against HTML stills):
+- Comp loads with `ImportFusionComp` (.comp). Loaders arrive as MediaIn nodes and still render.
+- Text size: `Size = px * 1.554 / width` (`TEXT_SIZE_K`); within ~1.5 % of the still. Recheck on 1920x1080.
+- Left / centre / right anchors and justification codes: correct as written.
+- RectangleMask Width is relative to frame width, Height to frame height (was Height / width).
+- `AppendToTimeline` `endFrame` is exclusive: pass the frame count, not count - 1.
+- Fonts: a missing Text+ font fails the whole comp and the render (no fallback). Install the series fonts
+  and restart Resolve before placing.
+- A layer id that is a Lua keyword (`not`, `end`, …) made the .comp unparseable: Resolve imported an
+  empty comp that renders opaque black. Node names are now prefixed when they collide.
+- Disabling a track does not stop its comps from being evaluated in a render; disable the clip instead.

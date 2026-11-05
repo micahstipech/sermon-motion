@@ -80,7 +80,13 @@ TREATMENTS_IN = {
     "settle":     "a 3-4% scale settle: presence without movement",
     "focus":      "comes into focus from a soft blur: reflective (use sparingly, it is an AI cliche as a default)",
     "draw":       "a rule or shape draws itself on: structure, underlining",
+    "collage":    "a piece laid down: slightly large and turned, settling flat as it fades in",
+    "paper":      "a sheet slides in from its edge (box layers); a soft edge wipe in Fusion",
 }
+# The moves the standing animation rule allows: a collage, a paper effect, a light movement with an
+# opacity shift, or no animation. Anything else is a lint error (older specs still build).
+ALLOWED_IN = {"cut", "fade", "rise", "settle", "collage", "paper"}
+ALLOWED_OUT = {"cut", "fade", "sink", "paper"}
 TREATMENTS_OUT = {
     "cut":   "leaves with the cut",
     "fade":  "fades, faster than it arrived",
@@ -88,6 +94,7 @@ TREATMENTS_OUT = {
     "wipe":  "wipes away in reading direction",
     "focus": "softens out of focus",
     "undraw": "a rule retracts toward its anchor",
+    "paper": "a sheet slides back to its edge",
 }
 
 
@@ -110,9 +117,9 @@ def expand_layer(layer, kit, duration):
     ti = float(lin.get("at", 0.0))
     to = float(lout.get("at", duration))
     din = float(lin.get("dur", {"cut": 0.0, "fade": 0.5, "rise": 0.7, "rise-mask": 0.75, "wipe": 0.9,
-                                 "track-in": 1.1, "settle": 0.8, "focus": 0.8, "draw": 0.7}.get(lin["treatment"], 0.6) * tempo))
+                                 "track-in": 1.1, "settle": 0.8, "focus": 0.8, "draw": 0.7, "collage": 0.6, "paper": 0.6}.get(lin["treatment"], 0.6) * tempo))
     dout = float(lout.get("dur", {"cut": 0.0, "fade": 0.3, "sink": 0.35, "wipe": 0.45, "focus": 0.35,
-                                   "undraw": 0.4}.get(lout["treatment"], 0.3) * tempo))
+                                   "undraw": 0.4, "paper": 0.5}.get(lout["treatment"], 0.3) * tempo))
     ein = lin.get("ease", e_in)
     eout = lout.get("ease", e_out)
     d = float(lin.get("distance", dist))
@@ -123,6 +130,9 @@ def expand_layer(layer, kit, duration):
         raise ValueError(f"layer {layer.get('id')}: unknown entrance treatment {tin!r}; known: {sorted(TREATMENTS_IN)}")
     if tin == "cut":
         _add(tracks, "opacity", [[max(0.0, ti - one_frame), 0.0], [ti, 1.0, "linear"]])
+    elif tin == "paper":
+        _add(tracks, "opacity", [[max(0.0, ti - one_frame), 0.0], [ti, 1.0, "linear"]])
+        _add(tracks, "paper", [[ti, 0.0], [ti + din, 1.0, lin.get("ease", "breathe")]])
     elif tin == "draw":
         _add(tracks, "opacity", [[max(0.0, ti - one_frame), 0.0], [ti, 1.0, "linear"]])
         _add(tracks, "draw", [[ti, 0.0], [ti + din, 1.0, lin.get("ease", "glide")]])
@@ -142,6 +152,10 @@ def expand_layer(layer, kit, duration):
             _add(tracks, "tracking", [[ti, float(lin.get("from", 0.25))], [ti + din, float(layer.get("tracking", 0.0)), ein]])
         elif tin == "settle":
             _add(tracks, "scale", [[ti, float(lin.get("from", 1.035))], [ti + din, 1.0, ein]])
+        elif tin == "collage":
+            rot = float(layer.get("rotation", 0.0))
+            _add(tracks, "scale", [[ti, 1.04], [ti + din, 1.0, ein]])
+            _add(tracks, "rotation", [[ti, rot + 1.5], [ti + din, rot, ein]])
         elif tin == "focus":
             _add(tracks, "blur", [[ti, float(lin.get("from", 10))], [ti + din, 0.0, ein]])
 
@@ -151,6 +165,9 @@ def expand_layer(layer, kit, duration):
     if to < duration or tout != "cut":
         start = to - dout
         if tout == "cut":
+            _add(tracks, "opacity", [[to - one_frame, 1.0], [to, 0.0, "linear"]])
+        elif tout == "paper":
+            _add(tracks, "paper_out", [[start, 0.0], [to, 1.0, lout.get("ease", "breathe")]])
             _add(tracks, "opacity", [[to - one_frame, 1.0], [to, 0.0, "linear"]])
         elif tout == "undraw":
             _add(tracks, "draw", [[start, 1.0], [to, 0.0, eout]])
@@ -237,6 +254,131 @@ def text_block_height(layer):
     return size * (1.25 * n)
 
 
+# ---------------------------------------------------------------- boxes and split screens
+# A layer with "box": [x, y, w, h] (px, top-left origin) lives only inside that rectangle:
+# an image is cover-fitted to the box (not the frame) and clipped to it; a rect fills it.
+# A "wipe" on a box layer reveals it from the edge named by "dir" (left | right | top | bottom)
+# and its "wipe" exit retracts it back toward that same edge.
+SPLIT_EDGE = {"top": "top", "bottom": "bottom", "left": "left", "right": "right"}
+
+
+def split_box(side, size, W, H):
+    """Box [x, y, w, h] for a split panel. size <= 1 is a fraction of the frame, else px."""
+    if side not in SPLIT_EDGE:
+        raise ValueError(f"split side must be one of {sorted(SPLIT_EDGE)}, not {side!r}")
+    full = H if side in ("top", "bottom") else W
+    px = float(size) * full if float(size) <= 1 else float(size)
+    return {"top": [0, 0, W, px], "bottom": [0, H - px, W, px],
+            "left": [0, 0, px, H], "right": [W - px, 0, px, H]}[side]
+
+
+def expand_split(spec):
+    """Spec-level "split": {"side", "size", "src" | "color", "zoom", "in", "out"} -> a box panel layer
+    inserted first (under everything else). The other half of the frame stays clear for the footage."""
+    sp = spec.get("split")
+    if not sp:
+        return
+    W, H = float(spec["width"]), float(spec["height"])
+    side = sp.get("side", "top")
+    box = split_box(side, sp.get("size", 0.5), W, H)
+    layer = {"id": sp.get("id", "split"), "box": box, "panel": True, "dir": sp.get("dir", SPLIT_EDGE[side]),
+             "torn": bool(sp.get("torn", True)),
+             "in": sp.get("in") or {"treatment": "cut", "at": 0.0},
+             "out": sp.get("out") or {"treatment": "cut", "at": float(spec["duration"])}}
+    if sp.get("src"):
+        layer.update({"type": "image", "src": sp["src"], "fit": "cover", "zoom": float(sp.get("zoom", 1.0))})
+        for k in ("x", "y"):
+            if k in sp:
+                layer[k] = sp[k]
+    else:
+        layer.update({"type": "rect", "color": sp.get("color", "ground")})
+    if any(L.get("id") == layer["id"] for L in spec.get("layers", [])):
+        return  # already expanded
+    spec.setdefault("layers", []).insert(0, layer)
+
+
+def box_of(layer):
+    b = layer.get("box")
+    if not b:
+        return None
+    if len(b) != 4:
+        raise ValueError(f"layer {layer.get('id')}: box must be [x, y, w, h]")
+    return [float(v) for v in b]
+
+
+def box_extent_keys(layer):
+    """Visible extent of a box (0..1 from its 'dir' edge) over time, as [[t, e, ease]] keys.
+    e = reveal * (1 - reveal_out): the wipe in grows from the edge, the wipe out retracts to it."""
+    tr = layer["tracks"]
+    rev = tr.get("reveal") or tr.get("paper") or [[0.0, 1.0]]
+    rout = tr.get("reveal_out") or tr.get("paper_out") or [[0.0, 0.0]]
+    times = sorted({k[0] for k in rev} | {k[0] for k in rout})
+    keys = []
+    for t in times:
+        ease = next((k[2] for k in rev + rout if k[0] == t and len(k) > 2), "glide")
+        keys.append([t, sample(rev, t) * (1.0 - sample(rout, t)), ease])
+    return keys
+
+
+def torn_polygon(seed, w, h, direction, amp=9.0, step=11):
+    """CSS polygon for a box with one torn edge: the edge away from `direction`, the side it entered from."""
+    import random
+    rnd = random.Random(seed)
+    length = h if direction in ("left", "right") else w
+    edge, pos, drift = [], 0.0, 0.0
+    while pos < length:
+        drift = drift * 0.72 + rnd.uniform(-amp, amp) * 0.55
+        edge.append((pos, drift - amp))
+        pos += step + rnd.randint(-3, 5)
+    edge.append((length, -amp))
+    if direction == "top":      # torn along the bottom
+        pts = [(0, 0), (w, 0)] + [(w - p, h + d) for p, d in edge]
+    elif direction == "bottom":  # torn along the top
+        pts = [(p, -d) for p, d in edge] + [(w, h), (0, h)]
+    elif direction == "left":    # torn along the right
+        pts = [(0, 0)] + [(w + d, p) for p, d in edge] + [(0, h)]
+    else:                        # torn along the left
+        pts = [(-d, p) for p, d in edge] + [(w, h), (w, 0)]
+    return "polygon(" + ",".join(f"{x:.1f}px {y:.1f}px" for x, y in pts) + ")"
+
+
+def text_safe_box(width, height, kit=None):
+    """(left, top, right, bottom) px that all text stays inside.
+
+    The margin is at least 10 % of each dimension on horizontal frames and 17.5 % on vertical ones
+    (kit `layout.text_margin` overrides it). Vertical frames are social video by default, so their
+    bottom edge also clears the phone app's caption area (kit `layout.social: false` turns that off).
+    """
+    layout = (kit or {}).get("layout") or {}
+    vertical = height > width
+    m = float(layout.get("text_margin", 0.175 if vertical else 0.10))
+    left, top, right, bottom = width * m, height * m, width * (1 - m), height * (1 - m)
+    if vertical and layout.get("social", True):
+        bottom = min(bottom, height * 0.6875)
+    return left, top, right, bottom
+
+
+def subtitle_style(kit, width, height):
+    """The kit's subtitle style, with its `vertical` overrides on portrait frames."""
+    st = dict((kit or {}).get("subtitles", {}))
+    if height > width:
+        st.update({"size": 52, "x": width * .5, "y": height * .66})  # above the phone app's caption area
+        st.update(st.get("vertical") or {})
+    return st
+
+
+def box_visible_rect(box, direction, e):
+    """[x, y, w, h] of the visible part of a box at extent e, growing from its 'direction' edge."""
+    bx, by, bw, bh = box
+    if direction == "right":
+        return [bx + bw * (1 - e), by, bw * e, bh]
+    if direction == "top":
+        return [bx, by, bw, bh * e]
+    if direction == "bottom":
+        return [bx, by + bh * (1 - e), bw, bh * e]
+    return [bx, by, bw * e, bh]  # left
+
+
 def load_spec(spec_path_or_obj, kit=None):
     spec = copy.deepcopy(spec_path_or_obj if isinstance(spec_path_or_obj, dict) else load_json(spec_path_or_obj))
     spec.setdefault("width", 1920)
@@ -244,6 +386,12 @@ def load_spec(spec_path_or_obj, kit=None):
     spec.setdefault("fps", 24)
     if "duration" not in spec:
         raise ValueError(f"spec {spec.get('id')}: missing duration")
+    expand_split(spec)
+    for layer in spec.get("layers", []):
+        b = box_of(layer)
+        if b and layer.get("type") == "image":
+            layer.setdefault("x", b[0] + b[2] / 2)
+            layer.setdefault("y", b[1] + b[3] / 2)
     seen = set()
     for i, layer in enumerate(spec.get("layers", [])):
         layer.setdefault("id", f"L{i + 1}")
@@ -295,8 +443,12 @@ def image_size(path):
 
 
 def image_fit(layer, native, W, H):
-    """Display size (w, h) in px for an image layer: fit cover/contain to the frame, or `w` px wide."""
+    """Display size (w, h) in px for an image layer: fit cover/contain to the frame (or to its box),
+    or `w` px wide."""
     nw, nh = native
+    b = layer.get("box")
+    if b:
+        W, H = float(b[2]), float(b[3])
     fit = layer.get("fit")
     if fit == "cover":
         s = max(W / nw, H / nh) * float(layer.get("zoom", 1.0))

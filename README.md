@@ -5,9 +5,12 @@ A Claude Code plugin that works as a motion-graphics designer for sermon video i
 Give it a sermon (a timeline export and a transcript) and the name of the series folder in
 `Sermon Series/`. It reads the
 sermon, proposes where graphics belong, and turns the art into a style kit. After you approve a
-**storyboard** and then a **mood board**, it builds restrained B-roll graphics as editable Fusion
-comps on **V3** and clean 2–3 word Text+ subtitles on **V4** (going up a track whenever something is
-already there).
+**storyboard** and then a **mood board**, it generates restrained graphics as transparent clips,
+one per graphic change, on **V3** and clean 2–3 word Text+ subtitles on **V4** (going up a track whenever
+something is already there). Your edit stays in Resolve. Prefer editable Fusion graphics? Use `/mg-fusion`.
+
+It works in any format. Vertical video is treated as social media by default, and horizontal stays a full
+option. Text always keeps a safe margin: at least 10 % on horizontal and 17.5 % on vertical.
 
 It does not cut the edit and does no sound work.
 
@@ -49,7 +52,8 @@ On the editing PC, setup also installs the Resolve pieces.
 | `/mg-decode` | A reference video or image → signature moves and kit values |
 | `/mg-storyboard` | Read the sermon → storyboard page (**gate 1**) |
 | `/mg-moodboard` | Kit + key graphics → mood board page with motion samples (**gate 2**) |
-| `/mg-build` | Build, lint, check over real footage, render fallbacks, package for Resolve |
+| `/mg-build` | Build generated clips (the default), lint, check over real footage, package for Resolve |
+| `/mg-fusion` | The same build with editable Fusion comps instead of generated clips |
 | `/mg-resolve` | Place the package on the open timeline |
 | `/mg-learn` | Turn feedback into house rules; record the video in the variation ledger |
 
@@ -114,7 +118,8 @@ tests/run.sh             end-to-end check on the example
 | Spec engine, HTML previews, ProRes 4444 render with alpha, stills, subtitles, palette, lint, ledger, review pages, packaging | Tested end to end (`bash tests/run.sh`) |
 | Generated Fusion files | Parse as valid Lua |
 | `place.py` track and overflow logic | Tested against a mock of the Resolve API |
-| Fusion files and `place.py` in real Resolve | **Not yet tested.** The first session on the editing PC runs the calibration in `skills/motion-designer/references/resolve.md` (text size scale, justification codes, mask units, comp import) and records the results. |
+| Generated clips, Text+ chip subtitles and `place.py` in real Resolve | Used in production on Resolve Studio 21.1.2, Windows, 1080×1920 |
+| Fusion files on a 1920×1080 timeline | **Not yet tested.** The first session on the editing PC runs the calibration in `skills/motion-designer/references/resolve.md` (text size scale, justification codes, mask units, comp import) and records the results. |
 
 ## Credits
 

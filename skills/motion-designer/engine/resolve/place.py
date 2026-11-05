@@ -116,7 +116,10 @@ def main(argv=None, package=None):
     ap.add_argument("--replace", action="store_true", help="remove earlier SM clips on SM tracks first")
     ap.add_argument("--no-subtitles", action="store_true")
     ap.add_argument("--no-graphics", action="store_true")
-    ap.add_argument("--prefer-renders", action="store_true", help="use ProRes renders instead of Fusion comps")
+    ap.add_argument("--prefer-renders", action="store_true", help="fusion mode: use ProRes renders instead of Fusion comps")
+    ap.add_argument("--new-timeline", default=None, help="duplicate the open timeline under this name and place on the copy")
+    ap.add_argument("--archive-older", default=None, metavar="TEXT",
+                    help="after placing, move other timelines with TEXT in their name to Older Versions/Timelines")
     ap.add_argument("--offset", type=float, default=None, help="seconds from timeline start to video time 0")
     a = ap.parse_args(argv)
     if not a.package:
@@ -134,6 +137,13 @@ def main(argv=None, package=None):
     if not tl:
         sys.exit("Open the sermon timeline first.")
     pool = proj.GetMediaPool()
+    mode = man.get("mode", "fusion")
+    if a.new_timeline and not a.dry_run:
+        copy = tl.DuplicateTimeline(a.new_timeline)
+        if not copy:
+            sys.exit(f"Could not duplicate the timeline as {a.new_timeline!r}.")
+        proj.SetCurrentTimeline(copy)
+        tl = proj.GetCurrentTimeline()
     fps = float(tl.GetSetting("timelineFrameRate") or proj.GetSetting("timelineFrameRate"))
     want = S.fps_value(man["fps"])
     if abs(fps - want) > 0.01:
@@ -147,7 +157,7 @@ def main(argv=None, package=None):
     carrier = find_clip(pool.GetRootFolder(), CARRIER)
     if not carrier:
         print(f"NOTE: no '{CARRIER}' in the Media Pool. Run install.py once, then drag Effects > Titles > "
-              f"{CARRIER} into the Media Pool. Graphics will use their ProRes renders; subtitles are skipped.")
+              f"{CARRIER} into this project's Media Pool. Subtitles are skipped; Fusion-mode graphics use their ProRes renders.")
 
     if a.replace and not a.dry_run:
         doomed = []
@@ -166,7 +176,8 @@ def main(argv=None, package=None):
     report = {"graphics": [], "subtitles": 0, "overflow": 0, "fallbacks": 0, "failed": []}
 
     def place_carrier(track, start, frames, comp_path, color, label):
-        items = pool.AppendToTimeline([{"mediaPoolItem": carrier, "startFrame": 0, "endFrame": frames - 1,
+        # Resolve 21: endFrame is exclusive (frames - 1 left every clip one frame short).
+        items = pool.AppendToTimeline([{"mediaPoolItem": carrier, "startFrame": 0, "endFrame": frames,
                                         "trackIndex": track, "recordFrame": start}])
         if not items:
             return None
@@ -182,13 +193,28 @@ def main(argv=None, package=None):
             pass
         return it
 
+    def bin_folder():
+        """Everything this package brings in lives in its own bin: Motion Graphics/<project>."""
+        root = pool.GetRootFolder()
+        def sub(parent, name):
+            return next((f for f in parent.GetSubFolderList() or [] if f.GetName() == name), None) or pool.AddSubFolder(parent, name)
+        return sub(sub(root, "Motion Graphics"), str(man.get("bin") or man.get("project") or "Package"))
+
     def place_render(track, start, frames, mov):
+        pool.SetCurrentFolder(bin_folder())
         imported = pool.ImportMedia([mov]) or []
+        pool.SetCurrentFolder(pool.GetRootFolder())
         if not imported:
             return None
-        items = pool.AppendToTimeline([{"mediaPoolItem": imported[0], "startFrame": 0, "endFrame": frames - 1,
+        items = pool.AppendToTimeline([{"mediaPoolItem": imported[0], "startFrame": 0, "endFrame": frames,
                                         "trackIndex": track, "recordFrame": start, "mediaType": 1}])
-        return items[0] if items else None
+        if not items:
+            return None
+        try:
+            items[0].SetClipColor(COLORS["graphics"])
+        except Exception:
+            pass
+        return items[0]
 
     # ---------------- graphics
     if not a.no_graphics:
@@ -202,6 +228,11 @@ def main(argv=None, package=None):
             how = "fusion"
             if a.dry_run:
                 pass
+            elif mode == "generated":
+                how = "clip"
+                if not (g.get("fallback") and place_render(track, start, frames, os.path.join(pkg, g["fallback"]))):
+                    report["failed"].append(g["id"])
+                    continue
             elif carrier and not a.prefer_renders and place_carrier(track, start, frames, comp_path,
                                                                    COLORS["overflow" if moved else "graphics"], g.get("title") or g["id"]):
                 pass
@@ -238,7 +269,27 @@ def main(argv=None, package=None):
                 print(f"  subtitles placed: {report['subtitles']}/{len(chunks)}")
 
     print(("DRY RUN: " if a.dry_run else "") + f"{len(report['graphics'])} graphics, {report['subtitles']} subtitles, "
-          f"{report['overflow']} moved up for conflicts, {report['fallbacks']} used ProRes renders.")
+          f"{report['overflow']} moved up for conflicts, {report['fallbacks']} Fusion fallbacks to ProRes renders.")
+    if not a.dry_run:
+        if carrier and pool.GetRootFolder():
+            try:
+                pool.MoveClips([carrier], bin_folder())
+            except Exception:
+                pass
+        if a.archive_older:
+            root = pool.GetRootFolder()
+            def sub2(parent, name):
+                return next((f for f in parent.GetSubFolderList() or [] if f.GetName() == name), None) or pool.AddSubFolder(parent, name)
+            older = sub2(sub2(root, "Older Versions"), "Timelines")
+            keep = tl.GetName()
+            moved = []
+            for i in range(1, proj.GetTimelineCount() + 1):
+                t = proj.GetTimelineByIndex(i)
+                if t.GetName() != keep and a.archive_older in t.GetName() and t.GetMediaPoolItem():
+                    moved.append(t.GetMediaPoolItem())
+            if moved:
+                pool.MoveClips(moved, older)
+            print(f"moved {len(moved)} older timelines to Older Versions/Timelines (nothing deleted)")
     for line in report["graphics"]:
         print("  " + line)
     if report["failed"]:

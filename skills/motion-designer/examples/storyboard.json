@@ -8,19 +8,19 @@
  "density": "light",
  "subtitles": {"on": true},
  "intro": {"id": "intro", "in": 2.0, "out": 7.5, "kind": "title", "shows": "Rooted (series name set small above the week's title)",
-           "treatment_in": "track-in", "zone": "upper-left", "idea": "series name gathers from wide tracking as the first sentence lands",
+           "treatment_in": "rise", "zone": "upper-left", "idea": "series name gathers from wide tracking as the first sentence lands",
            "purpose": "Names the series without a sting or logo animation.", "thumb": "review/thumbs/plate.jpg"},
  "outro": {"id": "outro", "in": 1950.0, "out": 1956.0, "kind": "quote", "shows": "\"Its leaves are always green.\"",
-           "treatment_in": "rise-mask", "zone": "center", "idea": "the verse he closes on, set once, no logo bumper",
+           "treatment_in": "rise", "zone": "center", "idea": "the verse he closes on, set once, no logo bumper",
            "purpose": "Ends on the text, not on branding.", "thumb": "review/thumbs/plate.jpg"},
  "beats": [
   {"id": "01", "in": 41.0, "out": 46.0, "kind": "nothing", "line": "I want to start with a confession…", "purpose": "Personal story; the face carries it."},
   {"id": "03", "in": 74.2, "out": 80.2, "kind": "title", "line": "What if the reason you feel so tired is that nothing in your life has roots?",
-   "shows": "Nothing has roots / JEREMIAH 17:8", "treatment_in": "rise-mask", "treatment_out": "sink", "zone": "lower-left",
+   "shows": "Nothing has roots / JEREMIAH 17:8", "treatment_in": "rise", "treatment_out": "sink", "zone": "lower-left",
    "purpose": "The sermon's question, stated once, on the word 'roots'.", "thumb": "review/thumbs/plate.jpg"},
   {"id": "07", "in": 212.8, "out": 217.3, "kind": "keyword", "line": "sending out its roots by the stream", "shows": "by the stream",
-   "treatment_in": "track-in", "treatment_out": "fade", "zone": "right-third", "purpose": "The image the sermon returns to.", "thumb": "review/thumbs/plate.jpg"},
+   "treatment_in": "rise", "treatment_out": "fade", "zone": "right-third", "purpose": "The image the sermon returns to.", "thumb": "review/thumbs/plate.jpg"},
   {"id": "12", "in": 611.0, "out": 614.5, "kind": "chapter", "line": "So how do you actually put roots down?", "shows": "02 · Putting roots down",
-   "treatment_in": "wipe", "treatment_out": "wipe", "zone": "lower-left", "purpose": "Turn into the application section.", "thumb": "review/thumbs/plate.jpg"}
+   "treatment_in": "rise", "treatment_out": "fade", "zone": "lower-left", "purpose": "Turn into the application section.", "thumb": "review/thumbs/plate.jpg"}
  ]
 }

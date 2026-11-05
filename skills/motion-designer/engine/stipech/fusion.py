@@ -12,10 +12,20 @@ Values marked CALIBRATE are the ones to confirm on first contact with Resolve
 """
 import os
 
-from .spec import EASES, font_for, resolve_color, estimate_text_width, text_block_height, fps_value, image_size, image_fit
+from .spec import (EASES, font_for, resolve_color, estimate_text_width, text_block_height, fps_value, image_size,
+                   image_fit, box_of, box_extent_keys, box_visible_rect)
 
-# CALIBRATE: Text+ Size is relative to frame width (1.0 = text as tall as the frame is wide).
-TEXT_SIZE_PER_PX = 1.0 / 1920.0
+# Text+ Size is relative to frame width. Calibrated 2026-11-04, Resolve Studio 21.1.2, 1080x1920:
+# Size = px * TEXT_SIZE_K / width matches the HTML preview (the earlier 1/1920 constant rendered
+# vertical text at 0.362 of its size). Check once on a 1920x1080 timeline as well.
+TEXT_SIZE_K = 1.554
+# Fusion mask sizes are per axis: Width is relative to frame width, Height to frame height
+# (calibrated 2026-11-04, Resolve Studio 21.1.2, 1080x1920: a 720 px band needs Height 720/1920,
+# a 741 px wipe band needs Width 741/1080). The earlier code divided Height by width.
+# Node names are written into the .comp as Lua identifiers: a layer called "not" or "end" makes the
+# whole comp fail to parse (Resolve then imports an empty comp that renders opaque black).
+LUA_KEYWORDS = {"and", "break", "do", "else", "elseif", "end", "false", "for", "function", "goto", "if", "in",
+                "local", "nil", "not", "or", "repeat", "return", "then", "true", "until", "while"}
 # CALIBRATE: Text+ CharacterSpacing 1.0 = normal; +0.1 roughly = +0.1 em of tracking.
 TRACKING_SCALE = 1.0
 # CALIBRATE: Blur XBlurSize units per spec pixel of blur.
@@ -182,6 +192,8 @@ def build(spec, kit, asset_root=None):
     x = 110
     for layer in spec["layers"]:
         lid = "".join(ch for ch in layer["id"] if ch.isalnum()) or "Layer"
+        if lid.lower() in LUA_KEYWORDS or lid[0].isdigit():
+            lid = "L" + lid
         tr = layer["tracks"]
         kind = layer.get("type", "text")
         lx, ly = float(layer.get("x", W / 2)), float(layer.get("y", H / 2))
@@ -201,7 +213,7 @@ def build(spec, kit, asset_root=None):
                 "StyledText": inp_value(str(layer.get("text", ""))),
                 "Font": inp_value(f["family"]),
                 "Style": inp_value(f.get("style", "Regular")),
-                "Size": inp_value(size * TEXT_SIZE_PER_PX),
+                "Size": inp_value(size * TEXT_SIZE_K / W),
                 "LineSpacing": inp_value(float(layer.get("leading", 1.0))),
                 "CharacterSpacing": c.value_or_spline(lid + "Tracking", tr.get("tracking"),
                                                       lambda v: 1.0 + v * TRACKING_SCALE, track_static),
@@ -213,6 +225,16 @@ def build(spec, kit, asset_root=None):
             }
             if layer.get("case") == "upper":
                 inputs["StyledText"] = inp_value(str(layer.get("text", "")).upper())
+            chip = layer.get("chip")
+            if chip:  # shading element 4 as a border fill: a paper chip that resizes with the words
+                cr, cg, cb, ca = resolve_color(chip.get("color", "#4A6166"), kit)
+                inputs.update({
+                    "Enabled4": inp_value(1), "ElementShape4": inp_value(2), "Level4": inp_value(1),
+                    "Red4": inp_value(cr), "Green4": inp_value(cg), "Blue4": inp_value(cb), "Alpha4": inp_value(ca),
+                    "ExtendHorizontal4": inp_value(float(chip.get("extend_h", .16))),
+                    "ExtendVertical4": inp_value(float(chip.get("extend_v", .05))),
+                    "Round4": inp_value(0.0), "Thickness4": inp_value(0.0),
+                })
             src = c.add(lid, "TextPlus", {"Inputs": inputs, "ViewInfo": Lua(f"OperatorInfo {{ Pos = {{ {x}, -99 }} }}")})
             pivot = [c.nx(lx), c.ny(ly)]
         elif kind == "rect":
@@ -266,6 +288,7 @@ def build(spec, kit, asset_root=None):
             merge_place["Center"] = c.xy_path(lid + "Place", tr.get("dx"), tr.get("dy"),
                                               lambda v: base[0] + v / W, lambda v: base[1] - v / H, base)
             merge_place["Size"] = c.value_or_spline(lid + "PlaceSize", tr.get("scale"), lambda v: v * s0, s0)
+            merge_place["Angle"] = c.value_or_spline(lid + "PlaceAngle", tr.get("rotation"), lambda v: v, float(layer.get("rotation", 0.0)))
         else:
             xf = lid + "Move"
             center = c.xy_path(xf + "Center", tr.get("dx"), tr.get("dy"),
@@ -273,13 +296,33 @@ def build(spec, kit, asset_root=None):
             size = c.value_or_spline(xf + "Size", tr.get("scale"), lambda v: v, 1.0)
             c.add(xf, "Transform", {"Inputs": {
                 "Center": center, "Pivot": inp_value(pivot),
-                "Size": size, "Input": inp_src(node, "Output"),
+                "Size": size, "Input": inp_src(node, "Output"), "Angle": c.value_or_spline(xf + "Angle", tr.get("rotation"), lambda v: v, float(layer.get("rotation", layer.get("angle", 0.0)))),
             }, "ViewInfo": Lua(f"OperatorInfo {{ Pos = {{ {x}, -33 }} }}")})
             node = xf
 
         # ---------------- mask (rect shape, reveal band, wipe)
         mask = None
-        if kind == "rect":
+        box = box_of(layer)
+        if box:
+            # split-screen panel / boxed image: clip to the box; a wipe grows the mask from its 'dir' edge
+            direction = layer.get("dir", "left")
+            ext = box_extent_keys(layer)
+            rects = [(k[0], box_visible_rect(box, direction, k[1]), k[2]) for k in ext]
+            mask = lid + "Box"
+            c.add(mask, "RectangleMask", {"Inputs": {
+                "MaskWidth": inp_value(W), "MaskHeight": inp_value(H),
+                "PixelAspect": inp_value([1, 1]), "ClippingMode": Lua('Input { Value = FuID { "None" }, }'),
+                "SoftEdge": inp_value(0.0),
+                "Center": c.xy_path(mask + "Center",
+                                    [[t, r[0] + r[2] / 2, e] for t, r, e in rects],
+                                    [[t, r[1] + r[3] / 2, e] for t, r, e in rects],
+                                    lambda v: c.nx(v), lambda v: c.ny(v),
+                                    (c.nx(box[0] + box[2] / 2), c.ny(box[1] + box[3] / 2))),
+                # CALIBRATE: mask Width/Height assumed relative to frame width (same as rules).
+                "Width": c.value_or_spline(mask + "W", [[t, r[2], e] for t, r, e in rects], lambda v: v / W, box[2] / W),
+                "Height": c.value_or_spline(mask + "H", [[t, r[3], e] for t, r, e in rects], lambda v: v / H, box[3] / H),
+            }, "ViewInfo": Lua(f"OperatorInfo {{ Pos = {{ {x + 55}, 0 }} }}")})
+        elif kind == "rect":
             w, h = float(layer.get("w", 200)), float(layer.get("h", 2))
             anchor = layer.get("anchor", "left")
             draw = tr.get("draw") or [[0.0, 1.0]]
@@ -299,7 +342,7 @@ def build(spec, kit, asset_root=None):
                 "Center": c.xy_path(mask + "Center", draw, None, cx, None, (cx(1.0), c.ny(ly))),
                 # CALIBRATE: mask Width/Height assumed relative to frame width.
                 "Width": c.value_or_spline(mask + "W", draw, lambda dv: w * dv / W, w / W),
-                "Height": inp_value(h / W),
+                "Height": inp_value(h / H),
             }, "ViewInfo": Lua(f"OperatorInfo {{ Pos = {{ {x + 55}, 0 }} }}")})
         elif layer.get("clip"):
             tw = estimate_text_width(layer, kit) + 40
@@ -324,7 +367,7 @@ def build(spec, kit, asset_root=None):
                 "Center": c.xy_path(mask + "Center", keys_c, None, lambda v: c.nx(v), None,
                                     (c.nx(keys_c[-1][1] if keys_c else left + tw / 2), c.ny(ly))),
                 "Width": c.value_or_spline(mask + "W", keys_w, lambda v: v / W, tw / W),
-                "Height": inp_value(th / W),
+                "Height": inp_value(th / H),
             }, "ViewInfo": Lua(f"OperatorInfo {{ Pos = {{ {x + 55}, 0 }} }}")})
 
         # ---------------- merge (opacity)

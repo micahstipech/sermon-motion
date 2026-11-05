@@ -139,10 +139,12 @@ def srt(chunks):
 
 def chunk_spec(c, kit, width=1920, height=1080, fps=24):
     """One subtitle as a graphic spec: clean, no animation (cut in, cut out), optional soft shadow."""
-    st = (kit or {}).get("subtitles", {})
+    from .spec import subtitle_style
+    st = subtitle_style(kit, width, height)
     size = float(st.get("size", 46))
     y = float(st.get("y", height * 0.86))
     layers = []
+    cx = float(st.get("x", width / 2))
     if st.get("shadow", True):
         layers.append({
             "id": "Shadow", "type": "text", "text": c["text"], "font": st.get("font", "subtitle"),
@@ -153,9 +155,12 @@ def chunk_spec(c, kit, width=1920, height=1080, fps=24):
         })
     layers.append({
         "id": "Subtitle", "type": "text", "text": c["text"], "font": st.get("font", "subtitle"),
-        "size": size, "x": width / 2, "y": y, "align": "center",
+        "size": size, "x": cx, "y": y, "align": "center",
         "color": st.get("color", "#FFFFFF"), "tracking": float(st.get("tracking", 0.0)),
         "case": st.get("case_transform"),
+        "chip": st.get("chip"),
+        # a small fixed tilt that varies clip to clip, like paper laid by hand
+        "angle": ((c["i"] * 37) % 29 - 14) / 14.0 * float(st.get("tilt", 0.0)),
     })
     return {"id": f"sub-{c['i']:04}", "kind": "subtitle", "width": width, "height": height, "fps": fps,
             "duration": round(c["e"] - c["s"], 3), "in": c["s"], "layers": layers}

@@ -27,11 +27,14 @@ The graphics draw attention lightly. A viewer should notice the words, not the a
 
 ## Over-animation (lint enforces most of these)
 
+Allowed moves: a collage, a paper effect, a light movement with an opacity shift, or none.
+
+
 - Max **two** properties change on entrance, one of which is opacity (rise = opacity + y; track-in =
   opacity + spacing).
 - No bounce, elastic or overshoot eases. No loops, no constant drift, no wiggle.
 - No particles, glows, lens flares, light leaks, shine sweeps, 3D spins, glitch.
-- No per-letter cascades on more than one graphic per video.
+- No per-letter cascades, pop, confetti, slams or shakes.
 - No camera moves on text. Text is set, not flown.
 - Max four layers visible at once in a graphic (text + rule + label + brand).
 
@@ -57,3 +60,20 @@ give. Diagnose by layer before fixing:
    bar". Check the ledger, change the idea.
 
 Fix, re-render stills, look again. Then show the user.
+
+## Text safe zones (every format)
+
+Text never sits close to the edge. `mg.py lint` errors when a text layer leaves the safe area:
+
+| Format | Margin on every edge (default minimum) | On 1920×1080 / 1080×1920 |
+|---|---|---|
+| Horizontal | 10 % | x 192–1728, y 108–972 |
+| Vertical | 17.5 % | x 189–891, y 336 and below |
+
+Vertical video is treated as social by default: type also stays above the phone app's caption area
+(y 1320 on 1920 tall), which makes the vertical band y 336–1320. Set `layout.social: false` in the kit
+for a vertical video that isn't for social, and `layout.text_margin` (a fraction) to change the margin.
+`allow_unsafe: true` on a layer is the deliberate exception; say why in the storyboard.
+
+Horizontal stays a full option: nothing about the pipeline assumes reels. On vertical, also center the
+speaker's face in the frame; ask before changing framing on the editor's clips, and work on a timeline copy.

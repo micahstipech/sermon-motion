@@ -2,11 +2,11 @@
  "id": "03-rooted-title", "kind": "title", "duration": 6.0, "fps": 24, "in": 74.2,
  "line": "What if the reason you feel so tired is that nothing in your life has roots?",
  "layers": [
-  {"id": "rule", "type": "rect", "x": 160, "y": 648, "w": 360, "h": 2, "color": "light@70", "anchor": "left",
-   "in": {"treatment": "draw", "at": 0.2}, "out": {"treatment": "fade", "at": 5.9}},
+  {"id": "rule", "type": "rect", "x": 196, "y": 648, "w": 360, "h": 2, "color": "light@70", "anchor": "left",
+   "in": {"treatment": "fade", "at": 0.2}, "out": {"treatment": "fade", "at": 5.9}},
   {"id": "title", "type": "text", "text": "Nothing has roots", "font": "display", "size": 84, "color": "light",
-   "x": 160, "y": 580, "align": "left", "in": {"treatment": "rise-mask", "at": 0.55}, "out": {"treatment": "sink", "at": 5.9}},
+   "x": 196, "y": 580, "align": "left", "in": {"treatment": "rise", "at": 0.55}, "out": {"treatment": "sink", "at": 5.9}},
   {"id": "ref", "type": "text", "text": "JEREMIAH 17:8", "font": "text", "size": 26, "small": true, "color": "light@80",
-   "tracking": 0.14, "x": 162, "y": 690, "align": "left", "in": {"treatment": "fade", "at": 1.4}, "out": {"treatment": "fade", "at": 5.8}}
+   "tracking": 0.14, "x": 198, "y": 690, "align": "left", "in": {"treatment": "fade", "at": 1.4}, "out": {"treatment": "fade", "at": 5.8}}
  ]
 }

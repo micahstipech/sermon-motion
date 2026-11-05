@@ -1,6 +1,6 @@
 ---
 name: motion-designer
-description: Motion-graphics designer for sermon and talking-head video in DaVinci Resolve. Turns a sermon (video + transcript) plus its series art and font into restrained B-roll motion graphics on their own track and clean 2–3 word Text+ subtitles on another, as editable Fusion comps placed on the timeline (ProRes 4444 fallback). Adapts to a new visual style from art, a font or a reference video, while keeping one way of thinking. Always storyboard first, then mood board, each approved before building. Use for motion graphics, B-roll titles, lower thirds, scripture/keyword graphics, sermon subtitles, "make the graphics match this series", or Fusion/Resolve graphics placement. Not for cutting the edit or for sound.
+description: Motion-graphics designer for sermon and talking-head video in DaVinci Resolve. Turns a sermon (video + transcript) plus its series art and font into restrained B-roll motion graphics on their own track and clean 2–3 word Text+ subtitles on another, as generated transparent clips, one per graphic change, placed on the timeline (Fusion comps on request with /mg-fusion). Adapts to a new visual style from art, a font or a reference video, while keeping one way of thinking. Always storyboard first, then mood board, each approved before building. Use for motion graphics, B-roll titles, lower thirds, scripture/keyword graphics, sermon subtitles, "make the graphics match this series", or Fusion/Resolve graphics placement. Not for cutting the edit or for sound.
 ---
 
 # Motion designer
@@ -28,14 +28,24 @@ repeating itself.
 3. **No AI-looking colour.** No saturated colour on black for contrast, no neon, no purple-blue
    gradients, no cream-and-terracotta house look. Keep it light. The palette comes from the inputs
    ([style-intake.md](references/style-intake.md), [anti-patterns.md](references/anti-patterns.md)).
-4. **No over-animation.** Titles draw attention lightly: one entrance move, a readable hold and a
+4. **No over-animation.** Only a collage, a paper effect, a light movement with an opacity shift, or
+   no animation at all; `mg.py lint` enforces it. Titles draw attention lightly: a readable hold and a
    quicker exit. No bounce, no particles, no glow, no constant drift. Subtitles are 2–3 words, clean
    and unanimated ([restraint.md](references/restraint.md), [subtitles.md](references/subtitles.md)).
 5. **Never invent content.** Words on screen come from the sermon, the scripture it quotes, or the
    user. Scripture references are checked against the sermon notes or transcript. No made-up stats or
    quotes.
-6. **Editable output.** Graphics are Fusion comps built from Text+ nodes with keyframes, and
-   subtitles are Text+ clips. A ProRes 4444 render backs up every graphic.
+6. **The edit stays in Resolve.** By default each graphic is a generated transparent ProRes 4444 clip,
+   cut at every graphic change on the graphics track, and each subtitle is an editable Text+ clip.
+   `/mg-fusion` builds the graphics as editable Fusion comps instead.
+
+## Standing rules from the user (2026-11-05; these win over anything below)
+
+1. **The edit stays in Resolve.** Graphics are overlay clips on the motion-graphics track, never burned into a render of the footage. Cut the graphics clip at every graphic change, so any section can be deleted on its own.
+2. **Subtitles are a real timeline track**, one clip per subtitle, with the design applied in Resolve, so timing can be edited by hand.
+3. **Animation is only** a collage, a paper effect, a light movement onto the screen with an opacity shift, or none. No pop, confetti, bounce, elastic, slam, shake or per-letter effects.
+4. **Text stays in the safe area, in every format.** At least a 10 % margin on horizontal video and 17.5 % on vertical; lint enforces it. Vertical video is treated as social media by default (it also clears the phone app's overlays), and horizontal stays a full option.
+5. **Keep the media bins organized.** All assets you use go in their own bin; superseded timeline versions go in a bin labelled as older versions.
 
 ## Where things live
 
@@ -155,11 +165,13 @@ proofread the `.srt` against the transcript (names, scripture, "Lord" vs "lord")
 ### 4. Render fallbacks and package
 
 ```bash
-node $SKILL/engine/render.js motion/build/NN-name.html motion/out/NN-name_<in>.mov --fps <video fps>
+node $SKILL/engine/render.js motion/build/NN-name.html motion/out/NN-name_<in>.mov --fps <video fps>   # this clip is what goes on the timeline
 python3 $SKILL/engine/mg.py package motion/plan.json motion/out/resolve
 ```
 
 `plan.json` lists every graphic (spec, timeline in-point, render) plus the subtitles and the kit.
+`"mode"` is `"generated"` by default, or `"fusion"` for `/mg-fusion`. Specs must not overlap: one
+graphic change is one spec is one clip, so any section can be deleted alone.
 Name renders by timeline in-point (`_12m03s40` = 12:03.40).
 
 ### 5. Place in Resolve
@@ -210,6 +222,9 @@ line what you are asking them to approve.
   full-frame cards, never as boxes behind text over footage. Previews downscale them automatically;
   Fusion loads the original.
 
+- Subtitles are Text+ in both modes, and a missing font fails the whole comp and the render in
+  Resolve 21. Install the fonts and restart Resolve before placing. SM Carrier must be in each
+  project's Media Pool.
 - Fonts must be installed on the editing PC for Fusion (Text+ uses installed fonts by family and
   style name). Ship the font files in the kit, and say so at hand-off.
 - HDR footage: `inspect` flags it. Design in SDR and check the graphics over the graded timeline.
