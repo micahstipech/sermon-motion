@@ -77,7 +77,7 @@ def build(plan_path, out_dir):
     return manifest
 
 
-README = """Stipech Motion package: {project}
+README = """Sermon Motion package: {project}
 Mode: {mode}   Graphics: {n}   Subtitles: {subs}   Tracks: graphics V{g}, subtitles V{s} (overflow goes higher)
 
 On the editing PC, with the sermon timeline open in DaVinci Resolve:
@@ -89,7 +89,7 @@ On the editing PC, with the sermon timeline open in DaVinci Resolve:
 2. Install the series fonts in kit/ (right-click > Install for all users) and restart Resolve.
 3. Place everything:
      python place.py .            (Resolve Studio, from a terminal)
-   or Workspace > Scripts > Stipech Motion - Place, and pick this folder.
+   or Workspace > Scripts > Sermon Motion - Place, and pick this folder.
    Add --dry-run to see what would be placed, --replace to clear an earlier placement,
    --new-timeline "Name" to place on a copy of the open timeline,
    --archive-older "Text" to move other timelines with that text in their name to Older Versions.

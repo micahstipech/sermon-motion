@@ -31,7 +31,7 @@ in its bin, and `--archive-older "Text"` moves superseded timelines to Older Ver
 ## How a Fusion graphic gets onto the timeline
 
 1. `SM Carrier` is a transparent title template (`engine/resolve/carrier.setting`). `install.py`
-   copies it to `…/Fusion/Templates/Edit/Titles/Stipech Motion/`. **Once**, the editor drags
+   copies it to `…/Fusion/Templates/Edit/Titles/Sermon Motion/`. **Once**, the editor drags
    Effects › Titles › SM Carrier into the Media Pool (any bin). The script finds it by name.
 2. For each graphic: `MediaPool.AppendToTimeline([{mediaPoolItem: carrier, startFrame: 0,
    endFrame: frames-1, trackIndex, recordFrame}])` puts a carrier of the right length on the right
@@ -69,7 +69,7 @@ python place.py PACKAGE_DIR --no-subtitles     # graphics only
   ```
   `place.py` also tries the default module paths on its own.
 - **Resolve (free)**: external scripting is not available. Use Workspace › Scripts › Utility ›
-  "Stipech Motion - Place" (installed by `install.py`), which asks for the package folder.
+  "Sermon Motion - Place" (installed by `install.py`), which asks for the package folder.
 - Python 3 (64-bit) must be installed on the PC for Resolve's scripting.
 - Large subtitle runs (1,500+ chunks for a long sermon) take a few minutes. The script prints
   progress every 100.

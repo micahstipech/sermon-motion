@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stipech Motion command line. Run `python3 mg.py <command> -h` for each command.
+"""Sermon Motion command line. Run `python3 mg.py <command> -h` for each command.
 
   doctor                         check python/node/ffmpeg/playwright/Pillow/whisper
   inspect VIDEO OUT              specs, contact sheet, video.json
@@ -186,18 +186,27 @@ def cmd_lint(a):
     sys.exit(1 if E else 0)
 
 
+def _migrate_settings():
+    """First run after the rename: copy ~/.stipech-motion to ~/.sermon-motion. The old folder stays."""
+    old, new = os.path.expanduser("~/.stipech-motion"), os.path.expanduser("~/.sermon-motion")
+    if os.path.isdir(old) and not os.path.exists(new):
+        import shutil
+        shutil.copytree(old, new)
+        print(f"copied settings from {old} to {new}", file=sys.stderr)
+
+
 def _house(a):
-    h = a.house or os.environ.get("STIPECH_HOUSE")
+    h = a.house or os.environ.get("SERMON_MOTION_HOUSE")
     if not h:
-        cfg = os.path.expanduser("~/.stipech-motion/config.json")
+        cfg = os.path.expanduser("~/.sermon-motion/config.json")
         if os.path.exists(cfg):
             h = S.load_json(cfg).get("house")
     return h
 
 
 def _series_root(a=None):
-    r = getattr(a, "root", None) or os.environ.get("STIPECH_SERIES")
-    cfg = os.path.expanduser("~/.stipech-motion/config.json")
+    r = getattr(a, "root", None) or os.environ.get("SERMON_MOTION_SERIES")
+    cfg = os.path.expanduser("~/.sermon-motion/config.json")
     if not r and os.path.exists(cfg):
         r = S.load_json(cfg).get("series_root")
     if not r:
@@ -212,7 +221,7 @@ def cmd_series(a):
     root = _series_root(a)
     if a.list:
         if not root or not os.path.isdir(root):
-            sys.exit(f"no Sermon Series folder at {root!r}; set series_root in ~/.stipech-motion/config.json (or run /mg-setup)")
+            sys.exit(f"no Sermon Series folder at {root!r}; set series_root in ~/.sermon-motion/config.json (or run /mg-setup)")
         for d in sorted(os.listdir(root)):
             p = os.path.join(root, d)
             if os.path.isdir(p) and not d.startswith((".", "_")):
@@ -288,7 +297,7 @@ def cmd_ledger(a):
     from stipech import ledger
     h = _house(a)
     if not h:
-        sys.exit("no house folder: pass --house, set STIPECH_HOUSE, or run /mg-setup")
+        sys.exit("no house folder: pass --house, set SERMON_MOTION_HOUSE, or run /mg-setup")
     board = S.load_json(a.board)
     path = os.path.join(h, "ledger.json")
     if a.action == "check":
@@ -331,6 +340,7 @@ def cmd_package(a):
 
 
 def main():
+    _migrate_settings()
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sp = ap.add_subparsers(dest="cmd", required=True)
     sp.add_parser("doctor").set_defaults(fn=cmd_doctor)

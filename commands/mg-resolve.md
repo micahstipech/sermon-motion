@@ -1,5 +1,5 @@
 ---
-description: Place a Stipech Motion package on the open DaVinci Resolve timeline (one clip per graphic on V3, one Text+ clip per subtitle on V4, go up on conflicts)
+description: Place a Sermon Motion package on the open DaVinci Resolve timeline (one clip per graphic on V3, one Text+ clip per subtitle on V4, go up on conflicts)
 argument-hint: [package folder] [--replace] [--no-subtitles]
 ---
 Use the **motion-designer** skill's Resolve guide (`${CLAUDE_PLUGIN_ROOT}/skills/motion-designer/references/resolve.md`) for: $ARGUMENTS

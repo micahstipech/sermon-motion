@@ -1,6 +1,6 @@
 # Third-party notices
 
-Stipech Motion merges ideas, methods and some code from these MIT-licensed projects. Thank you.
+Sermon Motion merges ideas, methods and some code from these MIT-licensed projects. Thank you.
 
 | Project | Used for | Licence |
 |---|---|---|

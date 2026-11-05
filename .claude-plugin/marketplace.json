@@ -1,9 +1,9 @@
 {
-  "name": "stipech-motion",
+  "name": "sermon-motion",
   "owner": {"name": "Micah Stipech"},
   "plugins": [
     {
-      "name": "stipech-motion",
+      "name": "sermon-motion",
       "source": "./",
       "description": "Motion-graphics designer for sermon video in DaVinci Resolve."
     }

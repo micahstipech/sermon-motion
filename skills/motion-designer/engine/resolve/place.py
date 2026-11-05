@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Place a Stipech Motion package on the current DaVinci Resolve timeline.
+"""Place a Sermon Motion package on the current DaVinci Resolve timeline.
 
     python place.py PACKAGE_DIR [--dry-run] [--replace] [--no-subtitles] [--no-graphics]
                                 [--offset SECONDS] [--prefer-renders]

@@ -1,4 +1,4 @@
-# Stipech Motion
+# Sermon Motion
 
 A Claude Code plugin that works as a motion-graphics designer for sermon video in DaVinci Resolve.
 
@@ -19,18 +19,22 @@ It does not cut the edit and does no sound work.
 On each machine (laptop and editing PC):
 
 ```bash
-git clone https://github.com/micahstipech/stipech-motion ~/stipech-motion
+git clone https://github.com/micahstipech/sermon-motion ~/sermon-motion
 ```
 
 Then in Claude Code:
 
 ```
-/plugin marketplace add ~/stipech-motion
-/plugin install stipech-motion@stipech-motion
-/mg-setup ~/stipech-motion/house
+/plugin marketplace add ~/sermon-motion
+/plugin install sermon-motion@sermon-motion
+/mg-setup ~/sermon-motion/house
 ```
 
-After pulling updates: `/plugin marketplace update stipech-motion`.
+After pulling updates: `/plugin marketplace update sermon-motion`.
+
+Coming from the old `stipech-motion` plugin? Remove it (`/plugin uninstall stipech-motion@stipech-motion`, then
+`/plugin marketplace remove stipech-motion`), install as above, and run `python install.py` from a package once.
+Your settings copy over by themselves, and SM Carrier goes back into each project's Media Pool when you next place there.
 
 `/mg-setup` checks the dependencies and points the skill at `house/`, the church's shared memory,
 which this repo syncs between machines. Dependencies:

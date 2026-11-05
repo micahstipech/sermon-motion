@@ -50,8 +50,8 @@ repeating itself.
 ## Where things live
 
 - **House folder**: the church's lasting memory, shared across videos and machines. Its path is in
-  `~/.stipech-motion/config.json` (`{"house": "..."}`), written by `/mg-setup`. Default: `house/` in
-  the user's clone of the stipech-motion repo, so git keeps the laptop and the PC in step.
+  `~/.sermon-motion/config.json` (`{"house": "..."}`), written by `/mg-setup`. Default: `house/` in
+  the user's clone of the sermon-motion repo, so git keeps the laptop and the PC in step.
   - `brand/`: logo files, lockups, brand fonts. These are the only assets allowed to repeat.
   - `rules.md`: everything the user has taught you, one line per rule. **Read it before every
     project.**

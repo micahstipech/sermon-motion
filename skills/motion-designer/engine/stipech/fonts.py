@@ -3,7 +3,7 @@
 "Usable" means installable (.ttf/.otf), readable, and legible at the sizes the role needs. When the
 series fonts fail that, the role falls back to Roboto Condensed (display, text and subtitle alike, or
 only the roles the series font can't carry). The files are downloaded as TrueType (Fusion needs
-installable fonts), cached in ~/.stipech-motion/fonts/, and copied into the series folder's Fonts/
+installable fonts), cached in ~/.sermon-motion/fonts/, and copied into the series folder's Fonts/
 so the package carries them to the editing PC.
 """
 import os
@@ -14,10 +14,10 @@ import urllib.request
 FALLBACK_FAMILY = "Roboto Condensed"
 # (italic, weight) -> file style name
 FALLBACK_STYLES = {(0, 400): "Regular", (0, 500): "Medium", (0, 700): "Bold", (1, 400): "Italic"}
-CACHE = os.path.expanduser("~/.stipech-motion/fonts")
+CACHE = os.path.expanduser("~/.sermon-motion/fonts")
 CSS_URL = "https://fonts.googleapis.com/css2?family={family}:ital,wght@{axes}"
 # Google Fonts serves .ttf to clients it does not recognise as a modern browser (woff2 otherwise).
-UA = "stipech-motion/1.0"
+UA = "sermon-motion/1.0"
 
 
 def _get(url):

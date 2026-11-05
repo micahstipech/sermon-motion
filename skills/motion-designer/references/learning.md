@@ -40,5 +40,5 @@ Read it before every project. One line per rule, newest at the bottom of its sec
 ## Improving the skill itself
 
 When a rule turns out to be true for any church and any series (not just this user's taste), move it
-into the reference it belongs to (restraint, treatments, anti-patterns…) in the stipech-motion repo,
+into the reference it belongs to (restraint, treatments, anti-patterns…) in the sermon-motion repo,
 and delete it from rules.md.

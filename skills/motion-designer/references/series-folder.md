@@ -16,7 +16,7 @@ Sermon Series/
     _stipech/                 ← written by the skill: inventory, colour analysis, swatches
 ```
 
-Location: `series_root` in `~/.stipech-motion/config.json`. Default: `<house>/Sermon Series`, so it
+Location: `series_root` in `~/.sermon-motion/config.json`. Default: `<house>/Sermon Series`, so it
 syncs through the repo. If the church keeps series art in a shared drive, point `series_root` there
 instead.
 
@@ -116,7 +116,7 @@ Judge legibility at real size: set a 5–7 word line at 46 px (subtitle) and 26 
 footage frame. If you have to work to read it, it fails that role.
 
 The command downloads TrueType files (Regular, Medium, Bold, Italic) from Google Fonts, caches them
-in `~/.stipech-motion/fonts/`, copies them into the series folder's `Fonts/` so the package carries
+in `~/.sermon-motion/fonts/`, copies them into the series folder's `Fonts/` so the package carries
 them to the PC, and updates `kit.json`. The roles it writes are Bold for display, Medium for text and
 subtitles, and Italic for italic, each marked `"fallback": true`. Still ask the user for the real
 fonts; the fallback keeps work moving until they arrive. With no network, tell the user to install
